@@ -35,14 +35,15 @@ void Game::init() {
     mainShader->createFragmentShader("resources/shaders/mainShader.frag");
     mainShader->link();
 
+    // Initialise lights and fog
     directionalLight.color = glm::vec3{1.0f, 1.0f, 1.0f};
     directionalLight.ambientIntensity = 0.25f;
     directionalLight.diffuseIntensity = 0.6f;
     directionalLight.direction = glm::normalize(glm::vec3{0.0f, -1.0f, 0.0f});
 
-    /*PointLight pointLight;
-    pointLight.position = glm::vec3{0.0f, 10.0f, 100.0f};
-    pointLight.color = glm::vec3{1.0f, 0.0f, 0.0f};
+    PointLight pointLight;
+    pointLight.position = glm::vec3{20.0f, 10.0f, 150.0f};
+    pointLight.color = glm::vec3{1.0f, 0.0f, 1.0f};
     pointLight.attenuation.constant = 1.0f;
     pointLight.attenuation.linear = 0.1f;
     pointLight.attenuation.exp = 0.01f;
@@ -50,15 +51,14 @@ void Game::init() {
 
     SpotLight spotLight;
     spotLight.position = glm::vec3{0.0f, 20.0f, 100.0f};
-    spotLight.color = glm::vec3{1.0f, 0.0f, 1.0f};
+    spotLight.color = glm::vec3{1.0f, 1.0f, 1.0f};
     spotLight.attenuation.constant = 1.0f;
     spotLight.attenuation.linear = 0.1f;
     spotLight.attenuation.exp = 0.01f;
-    spotLight.direction = glm::vec3{0, -1, 0};
+    spotLight.direction = glm::vec3{1, 0, 1};
     spotLight.cutoff = 0.5f;
-    spotLights.push_back(spotLight);*/
+    spotLights.push_back(spotLight);
 
-    // set color texture unit
     mainShader->use();
     mainShader->setUniform("fog_on", true);
     mainShader->setUniform("fog_colour", glm::vec3{0.5});
@@ -67,8 +67,6 @@ void Game::init() {
     mainShader->setUniform("fog_end", 500.f);
 
     mainShader->setUniform("lighting_on", true);
-    mainShader->setUniform("gMatSpecularIntensity", 1.f);
-    mainShader->setUniform("gSpecularPower", 10.f);
     mainShader->setUniform("transparency", 1.0f);
     mainShader->setUniform("gNumPointLights", static_cast<int>(pointLights.size()));
     mainShader->setUniform("gNumSpotLights", static_cast<int>(spotLights.size()));
@@ -129,6 +127,7 @@ void Game::init() {
 
     //////////////////////////////////////////////////////////////
 
+    // Create cubemap skybox
     std::array<std::string, 6> faces {
         "resources/skyboxes/desertlf.jpg",
         "resources/skyboxes/desertrt.jpg",
@@ -148,7 +147,7 @@ void Game::init() {
 
     //////////////////////////////////////////////////////////////
 
-    /* Create texture atlasses for several font sizes */
+    // Create texture atlasses for several font sizes
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
         std::cerr << "ERROR: Failed to init FreeType" << std::endl;
@@ -190,8 +189,6 @@ void Game::render() {
     auto& mainShader = shaders[0];
     mainShader->use();
     mainShader->setUniform("u_view_projection", projMatrix * viewMatrix);
-
-    // Set up some of the scene's parameters in the shader
     mainShader->setUniform("gEyeWorldPos", camera.getPosition());
 
     // Render scene
@@ -288,6 +285,7 @@ void Game::update() {
 
 void Game::displayFrameRate() {
     // Increase the elapsed time and frame counter
+    frameNumber++;
     elapsedTime += dt;
     frameCount++;
 
@@ -302,7 +300,7 @@ void Game::displayFrameRate() {
     }
 
     if (framesPerSecond > 0) {
-        textMesh->render(font, "FPS: " + std::to_string(framesPerSecond), 20, window.getHeight() - 30, 1);
+        textMesh->render(font, "FPS: " + std::to_string(framesPerSecond), 20, window.getHeight() - 30, 1.0f);
     }
 }
 

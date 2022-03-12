@@ -1,7 +1,7 @@
 #include "image.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <stb_image.h>
 
 Image::Image(const std::string& path, bool flip) {
     assert(std::filesystem::exists(path) && "Could not load file: " && path.c_str());

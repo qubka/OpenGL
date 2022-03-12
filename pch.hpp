@@ -31,8 +31,8 @@
 #include <GLFW/glfw3.h>
 
 // OPENAL
-#include <al.h>
-#include <alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
 // GLM
 #include <glm/glm.hpp>

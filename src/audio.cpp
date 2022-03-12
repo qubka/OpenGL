@@ -1,9 +1,9 @@
 #include "audio.hpp"
 #include "openal.hpp"
-#include "audioloader.hpp"
+#include "audiomanager.hpp"
 
 Audio::Audio(const std::string& path, bool loop, int pitch, float gain) {
-    auto data = AudioLoader::LoadWav(path, channels, sampleRate, bitsPerSample);
+    auto data = AudioManager::LoadWav(path, channels, sampleRate, bitsPerSample);
 
     alCall(alGenBuffers, 1, &buffer);
 
@@ -28,10 +28,12 @@ Audio::Audio(const std::string& path, bool loop, int pitch, float gain) {
     alCall(alGenSources, 1, &source);
     alCall(alSourcef, source, AL_PITCH, pitch);
     alCall(alSourcef, source, AL_GAIN, gain);
-    //alCall(alSource3f, source, AL_POSITION, 0, 0, 0);
-    //alCall(alSource3f, source, AL_VELOCITY, 0, 0, 0);
+    alCall(alSource3f, source, AL_POSITION, 0, 0, 0);
+    alCall(alSource3f, source, AL_VELOCITY, 0, 0, 0);
     alCall(alSourcei, source, AL_LOOPING, loop);
     alCall(alSourcei, source, AL_BUFFER, buffer);
+    //alCall(alSourcei, source, AL_SOURCE_RELATIVE, AL_TRUE);
+    //alCall(alDistanceModel, AL_LINEAR_DISTANCE);
 }
 
 Audio::~Audio() {

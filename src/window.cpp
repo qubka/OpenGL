@@ -39,8 +39,8 @@ Window::~Window() {
 }
 
 void Window::initGLFW() {
-    if (instance == this) {
-        instance = nullptr;
+    if (instance == nullptr) {
+        instance = this;
     }
 
     if (instances.empty()) {
@@ -80,10 +80,6 @@ void Window::initWindow(bool fullscreen) {
     glfwSetWindowUserPointer(window, this);
     glfwSetWindowPosCallback(window, PosCallback);
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
-
-    if (instance == nullptr) {
-        instance = this;
-    }
 }
 
 void Window::PosCallback(GLFWwindow* handle, int x, int y) {

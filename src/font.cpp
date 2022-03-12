@@ -2,7 +2,7 @@
 #include "opengl.hpp"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include <stb_image_write.h>
 
 #define NUM_GLYPHS 128
 

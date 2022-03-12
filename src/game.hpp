@@ -51,10 +51,11 @@ private:
 	void run();
 
 	Window window;
-	int frameCount{ 0 };
-	double elapsedTime{ 0.0 };
+	uint64_t frameNumber{ 0 };
+	uint32_t frameCount{ 0 };
+    uint32_t framesPerSecond{ 0 };
+    double elapsedTime{ 0.0 };
     double dt{ 0.0 };
-    int framesPerSecond{ 0 };
 
     friend int ::main(int argc, char** argv);
 

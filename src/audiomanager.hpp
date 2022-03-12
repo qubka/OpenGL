@@ -8,7 +8,7 @@ public:
     AudioManager() = default;
     ~AudioManager() = default;
 
-	bool init();
+    void init();
     void destroy();
 
     bool load(const std::string& path);
@@ -21,4 +21,8 @@ private:
     ALCdevice* device;
 
     std::unordered_map<std::string, std::unique_ptr<Audio>> sounds;
+
+public:
+    /// WAV
+    static std::vector<char> LoadWav(const std::string& path, uint8_t& channels, int32_t& sampleRate, uint8_t& bitsPerSample);
 };
