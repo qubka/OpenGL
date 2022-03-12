@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(OpenGLTemplate)
+project(OpenGL)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -32,7 +32,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         stb
         entt
         #magic_enum
-        minivorbis
 
         # dynamic link
         ${OPENAL_LIBRARY}
