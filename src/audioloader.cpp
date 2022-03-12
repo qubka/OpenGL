@@ -1,8 +1,5 @@
 #include "audioloader.hpp"
 
-#include <al.h>
-#include <alc.h>
-
 /// WAV
 
 int32_t convert_to_int(char* buffer, std::size_t len) {
@@ -125,23 +122,24 @@ bool LoadWavHeaderFile(std::ifstream& file,
         std::cerr << "ERROR: fail state set on the file" << std::endl;
         return false;
     }
-
     return true;
 }
 
-std::vector<char> AudioLoader::LoadWav(const std::string& filename,
+std::vector<char> AudioLoader::LoadWav(const std::string& path,
                                         uint8_t& channels,
                                         int32_t& sampleRate,
                                         uint8_t& bitsPerSample) {
-    std::ifstream in(filename, std::ios::binary);
+    assert(std::filesystem::exists(path) && "Could not load file: " && path.c_str());
+
+    std::ifstream in{path, std::ios::binary};
     if (!in.is_open()) {
-        std::cerr << "ERROR: Could not open " << filename <<  std::endl;
+        std::cerr << "ERROR: Could not open " << path <<  std::endl;
         return {};
     }
 
     ALsizei size;
     if (!LoadWavHeaderFile(in, channels, sampleRate, bitsPerSample, size)) {
-        std::cerr << "ERROR: Could not load wav header of " << filename << std::endl;
+        std::cerr << "ERROR: Could not load wav header of " << path << std::endl;
         return {};
     }
 

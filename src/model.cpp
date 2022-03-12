@@ -24,7 +24,7 @@ std::unique_ptr<Model> Model::Load(const std::filesystem::path& path) {
     const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        std::cerr << "Failed to load model at: " << path << " - " << import.GetErrorString() << std::endl;
+        std::cerr << "ERROR: Failed to load model at: " << path << " - " << import.GetErrorString() << std::endl;
         return model;
     }
 
@@ -114,7 +114,7 @@ std::vector<std::shared_ptr<Texture>> Model::loadTextures(const aiMaterial* mate
             // if texture hasn't been loaded already, load it
             if (!skip) {
                 if (!std::filesystem::exists(path)) {
-                    std::cerr << "Could load texture from path: " << path << std::endl;
+                    std::cerr << "ERROR: Could load texture from path: " << path << std::endl;
                     continue;
                 }
 
@@ -124,7 +124,7 @@ std::vector<std::shared_ptr<Texture>> Model::loadTextures(const aiMaterial* mate
                 texturesLoaded.push_back(texture); // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
             }
         } else {
-            std::cerr << "Could not get texture from material" << std::endl;
+            std::cerr << "ERROR: Could not get texture from material" << std::endl;
         }
     }
 

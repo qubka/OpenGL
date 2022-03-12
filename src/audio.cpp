@@ -2,10 +2,8 @@
 #include "openal.hpp"
 #include "audioloader.hpp"
 
-Audio::Audio(const std::string& path, bool loop, int pitch, float gain, const glm::vec3& position, const glm::vec3& velocity) {
+Audio::Audio(const std::string& path, bool loop, int pitch, float gain) {
     auto data = AudioLoader::LoadWav(path, channels, sampleRate, bitsPerSample);
-
-    assert(!data.empty() && "ERROR: Could not load wav: " && path.c_str());
 
     alCall(alGenBuffers, 1, &buffer);
 
@@ -19,10 +17,9 @@ Audio::Audio(const std::string& path, bool loop, int pitch, float gain, const gl
     else if (channels == 2 && bitsPerSample == 16)
         format = AL_FORMAT_STEREO16;
     else {
-        std::cerr
-                << "ERROR: unrecognised wave format: "
-                << channels << " channels, "
-                << bitsPerSample << " bps" << std::endl;
+        std::cerr << "ERROR: unrecognised wave format: "
+                  << channels << " channels, "
+                  << bitsPerSample << " bps" << std::endl;
         return;
     }
 
@@ -31,8 +28,8 @@ Audio::Audio(const std::string& path, bool loop, int pitch, float gain, const gl
     alCall(alGenSources, 1, &source);
     alCall(alSourcef, source, AL_PITCH, pitch);
     alCall(alSourcef, source, AL_GAIN, gain);
-    alCall(alSource3f, source, AL_POSITION, position.x, position.y, position.z);
-    alCall(alSource3f, source, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+    //alCall(alSource3f, source, AL_POSITION, 0, 0, 0);
+    //alCall(alSource3f, source, AL_VELOCITY, 0, 0, 0);
     alCall(alSourcei, source, AL_LOOPING, loop);
     alCall(alSourcei, source, AL_BUFFER, buffer);
 }
@@ -59,6 +56,12 @@ void Audio::pause() const {
         alCall(alSourcePause, source);
     }
 }
+
+/*void Audio::setListener(const glm::vec3& position) const {
+    alCall(alListener3f, AL_POSITION, position.x, position.y, position.z);
+    alCall(alListener3f, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+    alCall(alListener3f, AL_ORIENTATION, orientation.x, orientation.y, orientation.z);
+}*/
 
 void Audio::setPosition(const glm::vec3& position) const {
     alCall(alSource3f, source, AL_POSITION, position.x, position.y, position.z);

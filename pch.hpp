@@ -30,6 +30,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+// OPENAL
+#include <al.h>
+#include <alc.h>
+
 // GLM
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>

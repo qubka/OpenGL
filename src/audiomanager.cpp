@@ -1,15 +1,13 @@
 #include "audiomanager.hpp"
 #include "audio.hpp"
+#include "openal.hpp"
 
 bool AudioManager::init() {
-    device = alcOpenDevice(nullptr);
+    device = alcCall(alcOpenDevice, nullptr);
     assert(device && "Failed to initialize OPENAL!");
 
-    context = alcCreateContext(device, nullptr);
-
-    alcMakeContextCurrent(context);
-
-    alGetError();
+    context = alcCall(alcCreateContext, device, nullptr);
+    alcCall(alcMakeContextCurrent, context);
 
     return true;
 }
@@ -17,12 +15,9 @@ bool AudioManager::init() {
 void AudioManager::destroy() {
     sounds.clear();
 
-    context = alcGetCurrentContext();
-    device = alcGetContextsDevice(context);
-
-    alcMakeContextCurrent(nullptr);
-    alcDestroyContext(context);
-    alcCloseDevice(device);
+    alcCall(alcMakeContextCurrent, nullptr);
+    alcCall(alcDestroyContext, context);
+    alcCall(alcCloseDevice, device);
 }
 
 bool AudioManager::load(const std::string& path) {
@@ -36,7 +31,7 @@ bool AudioManager::load(const std::string& path) {
 void AudioManager::play(const std::string& path, const glm::vec3& position) {
     if (auto it = sounds.find(path); it != sounds.end()) {
         auto& sound{ *it->second };
-        sound.setPosition(position);
+        //sound.setPosition(position);
         sound.play();
     }
 }

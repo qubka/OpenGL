@@ -10,8 +10,8 @@ struct Material {
 	float transparency;
 };
 
-const int MAX_POINT_LIGHTS = 2;
-const int MAX_SPOT_LIGHTS = 2;
+const int MAX_POINT_LIGHTS = 1;
+const int MAX_SPOT_LIGHTS = 1;
 
 in vec2 v_tex_coord;
 in vec3 v_normal;
@@ -69,16 +69,16 @@ uniform float gMatSpecularIntensity;
 uniform float gSpecularPower;
 uniform bool has_texture = false;
 uniform Material material;
-uniform bool skybox_rendering = false;
 uniform float transparency;
 uniform bool lighting_on = true;
 uniform bool fog_on = false;
 uniform vec3 fog_colour;
 uniform int fog_factor_type;
+uniform float fog_start = 3.0f;
+uniform float fog_end = 15.0f;
+
 in vec4 v_pos;
 float rho = 0.15f;
-float fog_start = 3.0f;
-float fog_end = 15.0f;
 
 uniform bool colouring_on = false;
 uniform vec3 in_colour = vec3(1,0,0);
@@ -157,7 +157,7 @@ void main()
 
 	vec4 result;
 
-	if(skybox_rendering || !lighting_on) {
+	if(!lighting_on) {
 		if(has_texture) {
 			result = texture(diffuse0, In.TexCoord.xy);
 			result.w *= transparency;

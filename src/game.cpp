@@ -28,7 +28,7 @@ void Game::init() {
     audioManager.init();
     audioManager.load("resources/audio/Boing.wav");                    // Royalty free sound from freesound.org
     audioManager.load("resources/audio/fsm-team-escp-paradox.wav");    // Royalty free sound from freesound.org
-    //audioManager.play("resources/audio/Boing.wav", camera.getPosition());
+    audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
 
     auto mainShader = std::make_unique<Shader>();
     mainShader->createVertexShader("resources/shaders/mainShader.vert");
@@ -40,9 +40,38 @@ void Game::init() {
     directionalLight.diffuseIntensity = 0.6f;
     directionalLight.direction = glm::normalize(glm::vec3{0.0f, -1.0f, 0.0f});
 
+    /*PointLight pointLight;
+    pointLight.position = glm::vec3{0.0f, 10.0f, 100.0f};
+    pointLight.color = glm::vec3{1.0f, 0.0f, 0.0f};
+    pointLight.attenuation.constant = 1.0f;
+    pointLight.attenuation.linear = 0.1f;
+    pointLight.attenuation.exp = 0.01f;
+    pointLights.push_back(pointLight);
+
+    SpotLight spotLight;
+    spotLight.position = glm::vec3{0.0f, 20.0f, 100.0f};
+    spotLight.color = glm::vec3{1.0f, 0.0f, 1.0f};
+    spotLight.attenuation.constant = 1.0f;
+    spotLight.attenuation.linear = 0.1f;
+    spotLight.attenuation.exp = 0.01f;
+    spotLight.direction = glm::vec3{0, -1, 0};
+    spotLight.cutoff = 0.5f;
+    spotLights.push_back(spotLight);*/
+
     // set color texture unit
     mainShader->use();
+    mainShader->setUniform("fog_on", true);
+    mainShader->setUniform("fog_colour", glm::vec3{0.5});
+    mainShader->setUniform("fog_factor_type", 0);
+    mainShader->setUniform("fog_start", 20.f);
+    mainShader->setUniform("fog_end", 500.f);
+
     mainShader->setUniform("lighting_on", true);
+    mainShader->setUniform("gMatSpecularIntensity", 1.f);
+    mainShader->setUniform("gSpecularPower", 10.f);
+    mainShader->setUniform("transparency", 1.0f);
+    mainShader->setUniform("gNumPointLights", static_cast<int>(pointLights.size()));
+    mainShader->setUniform("gNumSpotLights", static_cast<int>(spotLights.size()));
     directionalLight.submit(mainShader);
 
     shaders.push_back(std::move(mainShader));
@@ -122,13 +151,13 @@ void Game::init() {
     /* Create texture atlasses for several font sizes */
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
-        std::cerr << "Failed to init FreeType" << std::endl;
+        std::cerr << "ERROR: Failed to init FreeType" << std::endl;
         return;
     }
 
     FT_Face face;
     if (FT_New_Face(ft, "resources/fonts/arial.ttf", 0, &face)) {
-        std::cerr << "Failed to load font: " << "resources/fonts/arial.ttf" << std::endl;
+        std::cerr << "ERROR: Failed to load font: " << "resources/fonts/arial.ttf" << std::endl;
         return;
     }
 
@@ -162,6 +191,9 @@ void Game::render() {
     mainShader->use();
     mainShader->setUniform("u_view_projection", projMatrix * viewMatrix);
 
+    // Set up some of the scene's parameters in the shader
+    mainShader->setUniform("gEyeWorldPos", camera.getPosition());
+
     // Render scene
 
     auto models = registry.view<const TransformComponent, const ModelComponent>();
@@ -183,6 +215,15 @@ void Game::render() {
         mainShader->setUniform("u_normal", normalMatrix);
         mesh()->render(mainShader);
     }
+
+    mainShader->setUniform("lighting_on", false);
+    for (size_t i = 0; i < pointLights.size(); i++) {
+        pointLights[i].submit(mainShader, i);
+    }
+    for (size_t i = 0; i < spotLights.size(); i++) {
+        spotLights[i].submit(mainShader, i);
+    }
+    mainShader->setUniform("lighting_on", true);
 
     //////////////////////////////////////////////////////////////
 
@@ -243,8 +284,6 @@ void Game::update() {
         window.toggleWireframe();
 
     camera.update(dt);
-
-    audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
 }
 
 void Game::displayFrameRate() {

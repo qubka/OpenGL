@@ -1,8 +1,7 @@
 #include "shader.hpp"
 #include "opengl.hpp"
 
-Shader::Shader() : vertexId{0}, fragmentId{0} {
-    glCall(glCreateProgram, programId);
+Shader::Shader() : programId{glCall_(glCreateProgram)} {
 }
 
 Shader::~Shader() {
@@ -23,14 +22,16 @@ void Shader::unuse() const {
 void Shader::link() const {
     glCall(glLinkProgram, programId);
 
+#ifndef NDEBUG
     GLint success;
 
     glCall(glGetProgramiv, programId, GL_LINK_STATUS, &success);
     if (!success) {
         GLchar infoLog[1024];
         glCall(glGetShaderInfoLog, programId, 1024, nullptr, infoLog);
-        std::cerr << "Error linking Shader code: " << infoLog << std::endl;
+        std::cerr << "ERROR: Linking Shader code: " << infoLog << std::endl;
     }
+#endif
 
     if (vertexId != 0) {
         glCall(glDetachShader, programId, vertexId);
@@ -40,12 +41,15 @@ void Shader::link() const {
     }
 
     glCall(glValidateProgram, programId);
+
+#ifndef NDEBUG
     glCall(glGetProgramiv, programId, GL_VALIDATE_STATUS, &success);
     if (!success) {
         GLchar infoLog[1024];
         glCall(glGetShaderInfoLog, programId, 1024, nullptr, infoLog);
-        std::cerr << "Warning validating Shader code: " << infoLog << std::endl;
+        std::cerr << "ERROR: Validating Shader code: " << infoLog << std::endl;
     }
+#endif
 }
 
 void Shader::createVertexShader(const std::string& path) {
@@ -57,9 +61,9 @@ void Shader::createFragmentShader(const std::string& path) {
 }
 
 GLuint Shader::createShader(const std::string& shaderCode, GLuint shaderType) const {
-    GLuint shaderId;
-    if (!glCall(glCreateShader, shaderId, shaderType)) {
-        std::cerr << "Error creating shader. Type: " << (shaderType == GL_FRAGMENT_SHADER ? "FRAGMENT" : "VERTEX") << std::endl;
+    GLuint shaderId = glCall(glCreateShader, shaderType);
+    if (!shaderId) {
+        std::cerr << "ERROR: creating shader. Type: " << (shaderType == GL_FRAGMENT_SHADER ? "FRAGMENT" : "VERTEX") << std::endl;
         return 0;
     }
 
@@ -67,14 +71,16 @@ GLuint Shader::createShader(const std::string& shaderCode, GLuint shaderType) co
     glCall(glShaderSource, shaderId, 1, &code, nullptr);
     glCall(glCompileShader, shaderId);
 
+#ifndef NDEBUG
     GLint success;
     glCall(glGetShaderiv, shaderId, GL_COMPILE_STATUS, &success);
     if (!success) {
         GLchar infoLog[1024];
         glCall(glGetShaderInfoLog, shaderId, 1024, nullptr, infoLog);
-        std::cerr << "Error compiling Shader code: " << infoLog << std::endl;
+        std::cerr << "ERROR: compiling Shader code: " << infoLog << std::endl;
         return 0;
     }
+#endif
 
     glCall(glAttachShader, programId, shaderId);
 
@@ -126,23 +132,24 @@ void Shader::setUniform(const std::string& name, const glm::mat4& value, int cou
 }
 
 GLint Shader::findUniform(const std::string& name) const {
-    GLint uniformLocation;
-    glCall(glGetUniformLocation, uniformLocation, programId, name.c_str());
+    GLint uniformLocation = glCall(glGetUniformLocation, programId, name.c_str());
     if (uniformLocation < 0) {
-        std::cerr << "Could not find uniform: " << name << std::endl;
+        std::cerr << "ERROR: Could not find uniform: " << name << std::endl;
     }
     return uniformLocation;
 }
 
 std::string Shader::ReadFile(const std::string& path) {
-    std::ifstream file{path};
-    if (file) {
-        std::stringstream stream;
-        stream << file.rdbuf();
-        file.close();
-        return stream.str();
-    } else {
-        std::cerr << "Cannot opened file: " << path << std::endl;
+    assert(std::filesystem::exists(path) && "Could not load file: " && path.c_str());
+
+    std::ifstream in{path};
+    if (!in.is_open()) {
+        std::cerr << "ERROR: Cannot opened file: " << path << std::endl;
         return "";
     }
+
+    std::stringstream stream;
+    stream << in.rdbuf();
+    in.close();
+    return stream.str();
 }

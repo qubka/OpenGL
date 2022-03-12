@@ -29,8 +29,8 @@ public:
 
 private:
     GLuint programId;
-    GLuint vertexId;
-    GLuint fragmentId;
+    GLuint vertexId{ 0 };
+    GLuint fragmentId{ 0 };
 
     GLint findUniform(const std::string& name) const;
     GLuint createShader(const std::string& shaderCode, GLuint shaderType) const;

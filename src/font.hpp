@@ -4,10 +4,10 @@
 #include FT_FREETYPE_H
 
 struct Glyph {
-    glm::vec2 advance{0};
-    glm::vec2 size{0};
-    glm::vec2 bearing{0};
-    glm::vec2 uv{0};
+    glm::vec2 advance;
+    glm::vec2 size;
+    glm::vec2 bearing;
+    glm::vec2 uv;
 };
 
 class Font {

@@ -1,11 +1,8 @@
 #pragma once
 
-#include <al.h>
-#include <alc.h>
-
 class Audio {
 public:
-    Audio(const std::string& path, bool loop = true, int pitch = 1, float gain = 1.0f, const glm::vec3& position = {}, const glm::vec3& velocity = {});
+    Audio(const std::string& path, bool loop = true, int pitch = 1, float gain = 1.0f);
     ~Audio();
 
     void play() const;

@@ -40,6 +40,8 @@ private:
     entt::registry registry;
 
     DirectionalLight directionalLight;
+	std::vector<SpotLight> spotLights;
+	std::vector<PointLight> pointLights;
 
     std::unique_ptr<Skybox> skybox;
     std::unique_ptr<TextMesh> textMesh;
