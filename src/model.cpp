@@ -21,7 +21,7 @@ std::unique_ptr<Model> Model::Load(const std::filesystem::path& path) {
     auto model = std::make_unique<Model>();
 
     Assimp::Importer import;
-    const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
+    const aiScene* scene = import.ReadFile(path.string(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         std::cerr << "ERROR: Failed to load model at: " << path << " - " << import.GetErrorString() << std::endl;
@@ -118,7 +118,7 @@ std::vector<std::shared_ptr<Texture>> Model::loadTextures(const aiMaterial* mate
                     continue;
                 }
 
-                auto texture = std::make_shared<Texture>(path, true, false);
+                auto texture = std::make_shared<Texture>(path.string(), true, false);
                 textures.push_back(texture);
                 texture->setType(type);
                 texturesLoaded.push_back(texture); // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.

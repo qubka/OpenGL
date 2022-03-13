@@ -4,7 +4,7 @@
 #include <stb_image.h>
 
 Image::Image(const std::string& path, bool flip) {
-    assert(std::filesystem::exists(path) && "Could not load file: " && path.c_str());
+    assert(std::filesystem::exists(path) && "Could not load file");
     stbi_set_flip_vertically_on_load(flip);
     pixels = stbi_load(path.c_str(), &width, &height, &channels, 0);
     if (!pixels) {

@@ -140,7 +140,7 @@ GLint Shader::findUniform(const std::string& name) const {
 }
 
 std::string Shader::ReadFile(const std::string& path) {
-    assert(std::filesystem::exists(path) && "Could not load file: " && path.c_str());
+    assert(std::filesystem::exists(path) && "Could not load file");
 
     std::ifstream in{path};
     if (!in.is_open()) {

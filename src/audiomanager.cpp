@@ -169,7 +169,7 @@ std::vector<char> AudioManager::LoadWav(const std::string& path,
                                         uint8_t& channels,
                                         int32_t& sampleRate,
                                         uint8_t& bitsPerSample) {
-    assert(std::filesystem::exists(path) && "Could not load file: " && path.c_str());
+    assert(std::filesystem::exists(path) && "Could not load file");
 
     std::ifstream in{path, std::ios::binary};
     if (!in.is_open()) {
