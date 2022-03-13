@@ -10,12 +10,6 @@ namespace glm {
     GLM_INLINE glm::quat quat_cast(const aiQuaternion& q) { return {q.w, q.x, q.y, q.z}; }
     GLM_INLINE glm::mat4 mat4_cast(const aiMatrix4x4& m) { return glm::transpose(glm::make_mat4(&m.a1)); }
     GLM_INLINE glm::mat4 mat4_cast(const aiMatrix3x3& m) { return glm::transpose(glm::make_mat3(&m.a1)); }
-    GLM_CONSTEXPR uint32_t hash(const char* s, int off = 0) { return !s[off] ? 5381 : (hash(s, off+1)*33) ^ s[off]; }
-
-    /*template<typename T, qualifier Q>
-    GLM_FUNC_QUALIFIER GLM_CONSTEXPR T cross(const vec<2, T, Q>& x, const vec<2, T, Q>& y)  {
-        return x.x * y.y - x.y * y.x;
-    }*/
 }
 
 namespace vec3 {
@@ -35,10 +29,3 @@ namespace vec2 {
     GLM_INLINE glm::vec2 down = glm::vec2{0,-1};
     GLM_INLINE glm::vec2 zero = glm::vec2{0,0};
 }
-
-#define GL_TEXTURE_FREE_MEMORY_ATI 0x87FC
-#define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
-#define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
-
-GLint glxGpuTotalMemory();
-GLint glxGpuAvailMemory();
