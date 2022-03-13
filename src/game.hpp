@@ -58,4 +58,7 @@ private:
     double dt{ 0.0 };
 
     friend int ::main(int argc, char** argv);
+
+public:
+	static Game& getInstance();
 };

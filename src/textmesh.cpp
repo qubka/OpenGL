@@ -19,8 +19,8 @@ TextMesh::TextMesh() {
 }
 
 TextMesh::~TextMesh() {
-    glCall(glDeleteVertexArrays, 1, &vao);
-    glCall(glDeleteBuffers, 1, &vbo);
+    if (vao) glCall(glDeleteVertexArrays, 1, &vao);
+    if (vbo) glCall(glDeleteBuffers, 1, &vbo);
 }
 
 void TextMesh::render(const std::unique_ptr<Font>& font, const std::string& text, float x, float y, float scale) const {
