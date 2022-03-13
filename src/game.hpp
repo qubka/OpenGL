@@ -27,12 +27,11 @@ private:
 	Game();
 	~Game();
 
-	// Three main methods used in the game.  Initialise runs once, while Update and Render run repeatedly in the game loop.
 	void init();
-	void update();
-	void render();
+    void run();
+    void update();
+    void render();
 
-	// Pointers to game objects.  They will get allocated in Game::Initialise()
     Window window;
     uint64_t frameNumber{ 0 };
     uint32_t frameCount{ 0 };
@@ -53,7 +52,6 @@ private:
     std::unique_ptr<Font> font;
 
 	void displayFrameRate();
-	void run();
 
     friend int ::main(int argc, char** argv);
 

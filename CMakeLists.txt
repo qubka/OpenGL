@@ -15,10 +15,6 @@ file(GLOB_RECURSE SRC_HEADERS src/*.hpp)
 set(HEADER_FILES pch.hpp)
 
 add_executable(${PROJECT_NAME} ${SRC_SOURCES} ${SRC_HEADERS} ${HEADER_FILES})
-add_custom_command(TARGET ${PROJECT_NAME}
-      POST_BUILD
-      COMMAND ${PROJECT_NAME}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         external
