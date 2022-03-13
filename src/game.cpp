@@ -324,18 +324,15 @@ void Game::run() {
     }
 }
 
-Game& Game::getInstance() {
-    static Game instance;
-    return instance;
-}
-
 int main(int args, char** argv) {
-    Game& game = Game::getInstance();
+    Game* game = new Game();
     try {
-        game.init();
-        game.run();
+        game->init();
+        game->run();
+        delete game;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
+        delete game;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
