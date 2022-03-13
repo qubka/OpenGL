@@ -42,7 +42,7 @@ void AudioManager::stop(const std::string& path) {
 
 /// WAV
 
-int32_t convert_to_int(char* buffer, std::size_t len) {
+int32_t convert_to_int(char* buffer, size_t len) {
     int32_t a;
     std::memcpy(&a, buffer, len);
     return a;
