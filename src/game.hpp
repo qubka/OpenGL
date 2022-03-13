@@ -33,29 +33,27 @@ private:
 	void render();
 
 	// Pointers to game objects.  They will get allocated in Game::Initialise()
-	Camera camera;
-	AudioManager audioManager;
-	std::vector<std::unique_ptr<Shader>> shaders;
+    Window window;
+    uint64_t frameNumber{ 0 };
+    uint32_t frameCount{ 0 };
+    uint32_t framesPerSecond{ 0 };
+    double elapsedTime{ 0.0 };
+    double dt{ 0.0 };
 
     entt::registry registry;
 
+    Camera camera;
+	AudioManager audioManager;
+	std::vector<std::unique_ptr<Shader>> shaders;
     DirectionalLight directionalLight;
 	std::vector<SpotLight> spotLights;
 	std::vector<PointLight> pointLights;
-
     std::unique_ptr<Skybox> skybox;
     std::unique_ptr<TextMesh> textMesh;
     std::unique_ptr<Font> font;
 
 	void displayFrameRate();
 	void run();
-
-	Window window;
-	uint64_t frameNumber{ 0 };
-	uint32_t frameCount{ 0 };
-    uint32_t framesPerSecond{ 0 };
-    double elapsedTime{ 0.0 };
-    double dt{ 0.0 };
 
     friend int ::main(int argc, char** argv);
 
