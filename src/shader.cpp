@@ -5,10 +5,7 @@ Shader::Shader() : programId{glCall_(glCreateProgram)} {
 }
 
 Shader::~Shader() {
-    glCall(glUseProgram, 0);
-    if (programId != 0) {
-        glCall(glDeleteProgram, programId);
-    }
+    glCall(glDeleteProgram, programId);
 }
 
 void Shader::use() const {
@@ -19,52 +16,90 @@ void Shader::unuse() const {
     glCall(glUseProgram, 0);
 }
 
-void Shader::link() const {
+bool Shader::link(const std::string& vertexPath, const std::string& fragmentPath, const std::string& tessControlPath, const std::string& tessEvalPath) const {
+    std::vector<GLuint> shaderIds; // for cleanup
+
+    bool success;
+
+    shaderIds.push_back(createShader(ReadFile(vertexPath), GL_VERTEX_SHADER, success));
+    if (!success) return false;
+
+    shaderIds.push_back(createShader(ReadFile(fragmentPath), GL_FRAGMENT_SHADER, success));
+    if (!success) return false;
+
+    if (!tessControlPath.empty()) {
+        shaderIds.push_back(createShader(ReadFile(tessControlPath), GL_TESS_CONTROL_SHADER, success));
+        if (!success) return false;
+    }
+
+    if (!tessEvalPath.empty()) {
+        shaderIds.push_back(createShader(ReadFile(tessEvalPath), GL_TESS_EVALUATION_SHADER, success));
+        if (!success) return false;
+    }
+
     glCall(glLinkProgram, programId);
 
 #ifndef NDEBUG
-    GLint success;
+    GLint status;
 
-    glCall(glGetProgramiv, programId, GL_LINK_STATUS, &success);
-    if (!success) {
-        GLchar infoLog[1024];
-        glCall(glGetShaderInfoLog, programId, 1024, nullptr, infoLog);
-        std::cerr << "ERROR: Linking Shader code: " << infoLog << std::endl;
+    glCall(glGetProgramiv, programId, GL_LINK_STATUS, &status);
+    if (!status) {
+        GLint length;
+        glCall(glGetProgramiv, programId, GL_INFO_LOG_LENGTH, &length);
+        std::string info(length, ' ');
+        glCall(glGetProgramInfoLog, programId, info.length(), &length, info.data());
+        std::cerr << "ERROR: Linking Program: " << std::endl;
+        std::cerr << info << std::endl;
+        return false;
     }
 #endif
 
-    if (vertexId != 0) {
-        glCall(glDetachShader, programId, vertexId);
+    for (auto shaderId : shaderIds) {
+        glCall(glDetachShader, programId, shaderId);
     }
-    if (fragmentId != 0) {
-        glCall(glDetachShader, programId, fragmentId);
-    }
-
-    glCall(glValidateProgram, programId);
 
 #ifndef NDEBUG
-    glCall(glGetProgramiv, programId, GL_VALIDATE_STATUS, &success);
-    if (!success) {
-        GLchar infoLog[1024];
-        glCall(glGetShaderInfoLog, programId, 1024, nullptr, infoLog);
-        std::cerr << "ERROR: Validating Shader code: " << infoLog << std::endl;
+    glCall(glValidateProgram, programId);
+
+    glCall(glGetProgramiv, programId, GL_VALIDATE_STATUS, &status);
+    if (!status) {
+        GLint length;
+        glCall(glGetProgramiv, programId, GL_INFO_LOG_LENGTH, &length);
+        std::string info(length, ' ');
+        glCall(glGetProgramInfoLog, programId, info.length(), &length, info.data());
+        std::cerr << "ERROR: Validating Program: " << std::endl;
+        std::cerr << info << std::endl;
+        return false;
     }
 #endif
+
+    return true;
 }
 
-void Shader::createVertexShader(const std::string& path) {
-    vertexId = createShader(ReadFile(path), GL_VERTEX_SHADER);
-}
-
-void Shader::createFragmentShader(const std::string& path) {
-    fragmentId = createShader(ReadFile(path), GL_FRAGMENT_SHADER);
-}
-
-GLuint Shader::createShader(const std::string& shaderCode, GLuint shaderType) const {
+GLuint Shader::createShader(const std::string& shaderCode, GLenum shaderType, bool& success) const {
     GLuint shaderId = glCall(glCreateShader, shaderType);
     if (!shaderId) {
-        std::cerr << "ERROR: creating shader. Type: " << (shaderType == GL_FRAGMENT_SHADER ? "FRAGMENT" : "VERTEX") << std::endl;
-        return 0;
+        std::cerr << "ERROR: creating shader. Type: ";
+        switch (shaderType) {
+            case GL_FRAGMENT_SHADER:
+                std::cerr << "GL_FRAGMENT_SHADER";
+                break;
+            case GL_VERTEX_SHADER:
+                std::cerr << "GL_VERTEX_SHADER";
+                break;
+            case GL_TESS_CONTROL_SHADER:
+                std::cerr << "GL_TESS_CONTROL_SHADER";
+                break;
+            case GL_TESS_EVALUATION_SHADER:
+                std::cerr << "GL_TESS_EVALUATION_SHADER";
+                break;
+            default:
+                std::cerr << "UNKNOWN GL SHADER";
+                break;
+        }
+        std::cerr << std::endl;
+        success = false;
+        return shaderId;
     }
 
     const GLchar* code = shaderCode.c_str();
@@ -72,18 +107,22 @@ GLuint Shader::createShader(const std::string& shaderCode, GLuint shaderType) co
     glCall(glCompileShader, shaderId);
 
 #ifndef NDEBUG
-    GLint success;
-    glCall(glGetShaderiv, shaderId, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        GLchar infoLog[1024];
-        glCall(glGetShaderInfoLog, shaderId, 1024, nullptr, infoLog);
-        std::cerr << "ERROR: compiling Shader code: " << infoLog << std::endl;
-        return 0;
+    GLint status;
+    glCall(glGetShaderiv, shaderId, GL_COMPILE_STATUS, &status);
+    if (!status) {
+        GLint length;
+        glCall(glGetShaderiv, shaderId, GL_INFO_LOG_LENGTH, &length);
+        std::string info(length, ' ');
+        glCall(glGetShaderInfoLog, shaderId, info.length(), &length, info.data());
+        std::cerr << "ERROR: Compiling Shader: " << std::endl;
+        std::cerr << info << std::endl;
+        success = false;
+        return shaderId;
     }
 #endif
 
     glCall(glAttachShader, programId, shaderId);
-
+    success = true;
     return shaderId;
 }
 
