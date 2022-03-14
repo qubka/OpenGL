@@ -5,7 +5,7 @@
 std::unique_ptr<Mesh> geometry::cuboid(const glm::vec3& halfExtents, bool inwards, const std::shared_ptr<Texture>& texture) {
     float orientation = 1;
     if (inwards)
-    orientation = -1;
+        orientation = -1;
 
     std::vector<Vertex> cuboid_vertices {
         //front
@@ -132,7 +132,7 @@ std::unique_ptr<Mesh> geometry::quad(const glm::vec2& extent, const std::shared_
     vertices.emplace_back(-extent.x, extent.y, 0.f);
 
     std::vector<Vertex> quad_vertices {
-        //  position        normal              tex coord
+        //  position                                  normal                         tex coord
         { vertices.at(0),  { 1.f, 1.f, 1.f },  { 0.f,  0.f } },
         { vertices.at(1),  { 1.f, 1.f, 1.f },  { 1.f,  0.f } },
         { vertices.at(2),  { 1.f, 1.f, 1.f },  { 0.0f, 1.f } },
@@ -141,9 +141,9 @@ std::unique_ptr<Mesh> geometry::quad(const glm::vec2& extent, const std::shared_
         { vertices.at(5),  { 1.f, 1.f, 1.f },  { 0.0f, 1.f } },
     };
 
-    std::vector<uint32_t> quad_indices{
-            0,  1,  2,
-            3,  4,  5,
+    std::vector<uint32_t> quad_indices {
+        0,  1,  2,
+        3,  4,  5,
     };
 
     return std::make_unique<Mesh>(std::move(quad_vertices), std::move(quad_indices), texture);
@@ -169,7 +169,7 @@ std::unique_ptr<Mesh> geometry::octahedron(const glm::vec3& extent, const std::s
     normals.push_back(-glm::cross(vertices.at(5) - vertices.at(4), vertices.at(5) - vertices.at(3)));
 
     std::vector<Vertex> octahedron_vertices {
-        //  position        normal            tex coord
+        //  position                             normal                       tex coord
         { vertices.at(0),   normals.at(0),   { 0.f,  0.f } },
         { vertices.at(2),   normals.at(0),   { 1.f,  0.f } },
         { vertices.at(1),   normals.at(0),   { 0.5f, 1.f } },
@@ -197,14 +197,10 @@ std::unique_ptr<Mesh> geometry::octahedron(const glm::vec3& extent, const std::s
     };
 
     std::vector<uint32_t> octahedron_indices {
-        0,  1,  2,
-        3,  4,  5,
-        6,  7,  8,
-        9,  10,  11,
-        12,  13,  14,
-        15,  16,  17,
-        18,  19,  20,
-        21,  22,  23,
+        0,  1,  2,      3,  4,  5,
+        6,  7,  8,      9,  10,  11,
+        12,  13,  14,   15,  16,  17,
+        18,  19,  20,   21,  22,  23,
     };
 
     return std::make_unique<Mesh>(std::move(octahedron_vertices), std::move(octahedron_indices), texture);
@@ -239,14 +235,12 @@ std::unique_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::
 
         { vertices.at(1),   normals.at(3),	   { 0.f,  0.f } },
         { vertices.at(2),   normals.at(3),	   { 1.f,  0.f } },
-        { vertices.at(3),    normals.at(3),   { 0.5f, 1.f } },
+        { vertices.at(3),   normals.at(3),    { 0.5f, 1.f } },
     };
 
     std::vector<uint32_t> tetrahedron_indices {
-        0,  1,  2,
-        3,  4,  5,
-        6,	7,	8,
-        9,	10,	11
+        0,  1,  2,     3,  4,  5,
+        6,	7,	8,     9, 10, 11
     };
 
     return std::make_unique<Mesh>(std::move(tetrahedron_vertices), std::move(tetrahedron_indices), texture);

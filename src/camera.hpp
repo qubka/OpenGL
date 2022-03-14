@@ -10,7 +10,7 @@ public:
     glm::vec3 getUpVector() const;					// Gets the camera up vector
     glm::vec3 getForwardVector() const;				// Gets the camera forward vector
     glm::vec3 getRightVector() const;				// Gets the camera right vector
-    glm::mat4 getViewMatrix() const;					    // Gets the camera view
+    glm::mat4 getViewMatrix() const;				// Gets the camera view
     glm::mat4& getPerspectiveProjectionMatrix();	// Gets the camera perspective projection matrix
 	glm::mat4& getOrthographicProjectionMatrix();	// Gets the camera orthographic projection matrix
 

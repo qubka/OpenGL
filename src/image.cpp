@@ -13,5 +13,6 @@ Image::Image(const std::string& path, bool flip) {
 }
 
 Image::~Image() {
-    stbi_image_free(pixels);
+    if (pixels)
+        stbi_image_free(pixels);
 }

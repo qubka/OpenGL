@@ -49,7 +49,10 @@ private:
 	std::vector<PointLight> pointLights;
     std::unique_ptr<Skybox> skybox;
     std::unique_ptr<TextMesh> textMesh;
-    std::unique_ptr<Font> font;
+	std::unique_ptr<Font> font;
+	std::unique_ptr<Font> icons;
+
+    bool darkMode{ true };
 
 	void displayFrameRate();
 

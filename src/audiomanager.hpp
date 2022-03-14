@@ -5,11 +5,8 @@
 class AudioManager
 {
 public:
-    AudioManager() = default;
-    ~AudioManager() = default;
-
-    void init();
-    void destroy();
+    AudioManager();
+    ~AudioManager();
 
     bool load(const std::string& path);
 

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "freefont.hpp"
 
 struct Glyph {
     glm::vec2 advance;
@@ -12,7 +11,7 @@ struct Glyph {
 
 class Font {
 public:
-    Font(const FT_Face& face, int size);
+    Font(const FontFace& face, int size);
     ~Font();
 
     void bind() const;

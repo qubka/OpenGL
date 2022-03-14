@@ -14,7 +14,6 @@ Game::Game() : window{ "OpenGL Template", { 1280, 720 }}, camera{}, audioManager
 
 // Destructor
 Game::~Game() {
-    audioManager.destroy();
 }
 
 // Initialisation:  This method only runs once at startup
@@ -25,7 +24,6 @@ void Game::init() {
     glCall(glEnable, GL_DEPTH_TEST);
 
     // Initialise audio and play background music
-    audioManager.init();
     audioManager.load("resources/audio/Boing.wav");                    // Royalty free sound from freesound.org
     audioManager.load("resources/audio/fsm-team-escp-paradox.wav");    // Royalty free sound from freesound.org
     audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
@@ -37,26 +35,30 @@ void Game::init() {
 
     // Initialise lights and fog
     directionalLight.color = glm::vec3{1.0f, 1.0f, 1.0f};
-    directionalLight.ambientIntensity = 0.25f;
-    directionalLight.diffuseIntensity = 0.6f;
+    directionalLight.ambientIntensity = darkMode ? 0.15f : 1.0f;
+    directionalLight.diffuseIntensity = darkMode ? 0.1f : 1.0f;
     directionalLight.direction = glm::normalize(glm::vec3{0.0f, -1.0f, 0.0f});
 
     PointLight pointLight;
     pointLight.position = glm::vec3{20.0f, 10.0f, 150.0f};
     pointLight.color = glm::vec3{1.0f, 0.0f, 1.0f};
-    pointLight.attenuation.constant = 1.0f;
-    pointLight.attenuation.linear = 0.1f;
-    pointLight.attenuation.exp = 0.01f;
+    pointLight.ambientIntensity = 0.25f;
+    pointLight.diffuseIntensity = 0.6f;
+    pointLights.push_back(pointLight);
+
+    pointLight.position = glm::vec3{70.0f, 10.0f, 100.0f};
+    pointLight.color = glm::vec3{0.0f, 1.0f, 1.0f};
+    pointLight.ambientIntensity = 0.25f;
+    pointLight.diffuseIntensity = 0.6f;
     pointLights.push_back(pointLight);
 
     SpotLight spotLight;
-    spotLight.position = glm::vec3{0.0f, 20.0f, 100.0f};
-    spotLight.color = glm::vec3{1.0f, 1.0f, 1.0f};
-    spotLight.attenuation.constant = 1.0f;
-    spotLight.attenuation.linear = 0.1f;
-    spotLight.attenuation.exp = 0.01f;
-    spotLight.direction = glm::vec3{1, 0, 1};
-    spotLight.cutoff = 0.5f;
+    spotLight.position = glm::vec3{40.0f, 10.0f, 50.0f};
+    spotLight.color = glm::vec3{0.0f, 0.0f, 1.0f};
+    spotLight.ambientIntensity = 0.9f;
+    spotLight.diffuseIntensity = 0.9f;
+    spotLight.direction = glm::vec3{0, -1, 0};
+    spotLight.cutoff = 0.9f;
     spotLights.push_back(spotLight);
 
     mainShader->use();
@@ -68,6 +70,8 @@ void Game::init() {
 
     mainShader->setUniform("lighting_on", true);
     mainShader->setUniform("transparency", 1.0f);
+    mainShader->setUniform("gMatSpecularIntensity", 1.f);
+    mainShader->setUniform("gSpecularPower", 10.f);
     mainShader->setUniform("gNumPointLights", static_cast<int>(pointLights.size()));
     mainShader->setUniform("gNumSpotLights", static_cast<int>(spotLights.size()));
     directionalLight.submit(mainShader);
@@ -154,11 +158,9 @@ void Game::init() {
         return;
     }
 
-    FT_Face face;
-    if (FT_New_Face(ft, "resources/fonts/arial.ttf", 0, &face)) {
-        std::cerr << "ERROR: Failed to load font: " << "resources/fonts/arial.ttf" << std::endl;
-        return;
-    }
+    FontLibrary library;
+    FontFace roboto_face{library, "resources/fonts/Roboto-Black.ttf"};
+    FontFace icon_face{ library, "resources/fonts/Font90Icons-2ePo.ttf"};
 
     auto textShader = std::make_unique<Shader>();
     textShader->createVertexShader("resources/shaders/textShader.vert");
@@ -168,10 +170,8 @@ void Game::init() {
     shaders.push_back(std::move(textShader));
 
     textMesh = std::make_unique<TextMesh>();
-    font = std::make_unique<Font>(face, 32);
-
-    FT_Done_Face(face);
-    FT_Done_FreeType(ft);
+    font = std::make_unique<Font>(roboto_face, 32);
+    icons = std::make_unique<Font>(icon_face, 32);
 }
 
 // Render method runs repeatedly in a loop
@@ -190,6 +190,10 @@ void Game::render() {
     mainShader->use();
     mainShader->setUniform("u_view_projection", projMatrix * viewMatrix);
     mainShader->setUniform("gEyeWorldPos", camera.getPosition());
+    mainShader->setUniform("fog_on", darkMode);
+    directionalLight.ambientIntensity = darkMode ? 0.15f : 1.0f;
+    directionalLight.diffuseIntensity = darkMode ? 0.1f : 1.0f;
+    directionalLight.submit(shaders[0]);
 
     // Render scene
 
@@ -250,7 +254,7 @@ void Game::render() {
 
     textShader->use();
     textShader->setUniform("u_projection", camera.getOrthographicProjectionMatrix());
-    textShader->setUniform("color", glm::vec4{ 1});
+    textShader->setUniform("color", glm::vec4{1});
     textShader->setUniform("atlas", 0);
 
     font->bind();
@@ -258,11 +262,31 @@ void Game::render() {
     textMesh->render(font, "Press TAB to lock mouse and use camera", 20, 20, 1);
     textMesh->render(font, "Press ESC to exit", 20, 50, 1);
     textMesh->render(font, "Press F1 to enable wiremode renderer", 20, 80, 1);
+    textMesh->render(font, "Press F2 to toggle lighting", 20, 110, 1);
+    textMesh->render(font, glm::to_string(camera.getPosition()), window.getWidth() / 2, window.getHeight() - 30, 1);
 
 	// Draw the 2D graphics after the 3D graphics
 	displayFrameRate();
 
     font->unbind();
+
+    // Draw icons
+
+    icons->bind();
+
+    textShader->setUniform("color", glm::vec4{1, 0, 0, 1});
+
+    textMesh->render(icons, "abcdefghijkl", 20, window.getHeight() / 2, 1);
+
+    textShader->setUniform("color", glm::vec4{0, 1, 0, 1});
+
+    textMesh->render(icons, "mnopqrstuvwxyz", 20, window.getHeight() / 2 - 30, 1);
+
+    textShader->setUniform("color", glm::vec4{0, 0, 1, 1});
+
+    textMesh->render(icons, "ABCDEFGHIJKLMN\nOPQRSTUVWXYZ", 20, window.getHeight() / 2 - 60, 1);
+
+    icons->unbind();
 }
 
 // Update method runs repeatedly with the Render method
@@ -279,6 +303,10 @@ void Game::update() {
 
     if (Input::GetKeyDown(GLFW_KEY_F1))
         window.toggleWireframe();
+
+    if (Input::GetKeyDown(GLFW_KEY_F2)) {
+        darkMode = !darkMode;
+    }
 
     camera.update(dt);
 }

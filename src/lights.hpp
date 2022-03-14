@@ -5,7 +5,7 @@ class Shader;
 struct BaseLight {
     glm::vec3 color{1.0f};
     float ambientIntensity{0.0f};
-    float diffuseIntensity{10.0f};
+    float diffuseIntensity{0.0f};
 };
 
 struct DirectionalLight : public BaseLight {

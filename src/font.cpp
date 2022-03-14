@@ -6,12 +6,12 @@
 
 #define NUM_GLYPHS 128
 
-Font::Font(const FT_Face& face, int size) {
+Font::Font(const FontFace& face, int size) {
     FT_Set_Pixel_Sizes(face, 0, size);
-    const auto& glyph = face->glyph;
+    const auto& glyph = face()->glyph;
     //FT_Set_Char_Size(face, 0, size << 6, 48, 48);
 
-    metrics = 1 + (face->size->metrics.height >> 6);
+    metrics = 1 + (face()->size->metrics.height >> 6);
     glm::ivec2 o{0, 0};
     int maxDim = metrics * std::ceil(std::sqrt(NUM_GLYPHS / 2));
 

@@ -2,7 +2,7 @@
 #include "audio.hpp"
 #include "openal.hpp"
 
-void AudioManager::init() {
+AudioManager::AudioManager() {
     device = alcCall(alcOpenDevice, nullptr);
     assert(device && "Failed to initialize OPENAL!");
 
@@ -10,7 +10,7 @@ void AudioManager::init() {
     alcCall(alcMakeContextCurrent, context);
 }
 
-void AudioManager::destroy() {
+AudioManager::~AudioManager() {
     sounds.clear();
 
     alcCall(alcMakeContextCurrent, nullptr);
