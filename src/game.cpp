@@ -19,7 +19,7 @@ Game::~Game() {
 // Initialisation:  This method only runs once at startup
 void Game::init() {
     // Set the clear colour and depth
-    glCall(glClearColor, 1, 1, 1, 1);
+    glCall(glClearColor, 1.0f, 1.0f, 1.0f, 1.0f);
     glCall(glEnable, GL_CULL_FACE);
     glCall(glEnable, GL_DEPTH_TEST);
 
@@ -28,10 +28,8 @@ void Game::init() {
     audioManager.load("resources/audio/fsm-team-escp-paradox.wav");    // Royalty free sound from freesound.org
     audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
 
-    auto mainShader = std::make_unique<Shader>();
-    mainShader->createVertexShader("resources/shaders/mainShader.vert");
-    mainShader->createFragmentShader("resources/shaders/mainShader.frag");
-    mainShader->link();
+    mainShader = std::make_unique<Shader>();
+    mainShader->link("resources/shaders/mainShader.vert", "resources/shaders/mainShader.frag");
 
     // Initialise lights and fog
     directionalLight.color = glm::vec3{1.0f, 1.0f, 1.0f};
@@ -76,7 +74,19 @@ void Game::init() {
     mainShader->setUniform("gNumSpotLights", static_cast<int>(spotLights.size()));
     directionalLight.submit(mainShader);
 
-    shaders.push_back(std::move(mainShader));
+    // generate path for pipe
+    std::vector<glm::vec3> path = geometry::buildSpiralPath(4, 1, -3, 3, 3.5, 200);
+    std::cout << "fitst point: " << glm::to_string(path[0]) << std::endl;
+    std::cout << "last point: " << glm::to_string(path[path.size()-1]) << std::endl;
+
+    // sectional contour of pipe
+    std::vector<glm::vec3> circle = geometry::buildCircle(0.5f, 48); // radius, segments
+
+    // configure pipe
+    std::vector<glm::vec3> p(1, path[0]);
+    pipe.set(p, circle);
+
+
 
     // Create entities
 
@@ -142,12 +152,21 @@ void Game::init() {
     };
     skybox = std::make_unique<Skybox>(faces);
 
-    auto skyboxShader = std::make_unique<Shader>();
-    skyboxShader->createVertexShader("resources/shaders/skyboxShader.vert");
-    skyboxShader->createFragmentShader("resources/shaders/skyboxShader.frag");
-    skyboxShader->link();
+    skyboxShader = std::make_unique<Shader>();
+    skyboxShader->link("resources/shaders/skyboxShader.vert", "resources/shaders/skyboxShader.frag");
 
-    shaders.push_back(std::move(skyboxShader));
+    //////////////////////////////////////////////////////////////
+
+    /*tessShader = std::make_unique<Shader>();
+    tessShader->link("resources/shaders/splineShader.vert",
+                       "resources/shaders/splineShader.frag",
+                       "resources/shaders/splineShader.tesc",
+                       "resources/shaders/splineShader.tese");
+
+    pointsShader = std::make_unique<Shader>();
+    pointsShader->link("resources/shaders/splineShader.vert", "resources/shaders/splineShader.frag");
+
+    spline = std::make_unique<CatmullRom>();*/
 
     //////////////////////////////////////////////////////////////
 
@@ -162,12 +181,8 @@ void Game::init() {
     FontFace roboto_face{library, "resources/fonts/Roboto-Black.ttf"};
     FontFace icon_face{ library, "resources/fonts/Font90Icons-2ePo.ttf"};
 
-    auto textShader = std::make_unique<Shader>();
-    textShader->createVertexShader("resources/shaders/textShader.vert");
-    textShader->createFragmentShader("resources/shaders/textShader.frag");
-    textShader->link();
-
-    shaders.push_back(std::move(textShader));
+    textShader = std::make_unique<Shader>();
+    textShader->link("resources/shaders/textShader.vert", "resources/shaders/textShader.frag");
 
     textMesh = std::make_unique<TextMesh>();
     font = std::make_unique<Font>(roboto_face, 32);
@@ -186,14 +201,13 @@ void Game::render() {
     auto projMatrix = camera.getPerspectiveProjectionMatrix();
 
     // Use the main shader program
-    auto& mainShader = shaders[0];
     mainShader->use();
     mainShader->setUniform("u_view_projection", projMatrix * viewMatrix);
     mainShader->setUniform("gEyeWorldPos", camera.getPosition());
     mainShader->setUniform("fog_on", darkMode);
     directionalLight.ambientIntensity = darkMode ? 0.15f : 1.0f;
     directionalLight.diffuseIntensity = darkMode ? 0.1f : 1.0f;
-    directionalLight.submit(shaders[0]);
+    directionalLight.submit(mainShader);
 
     // Render scene
 
@@ -231,8 +245,6 @@ void Game::render() {
     // change depth function so depth test passes when values are equal to depth buffer's content
     glCall(glDepthFunc, GL_LEQUAL);
 
-    auto& skyboxShader = shaders[1];
-
     skyboxShader->use();
     skyboxShader->setUniform("u_view", glm::mat4{glm::mat3{viewMatrix}}); // remove translation from the view matrix
     skyboxShader->setUniform("u_projection", projMatrix);
@@ -245,12 +257,24 @@ void Game::render() {
 
     //////////////////////////////////////////////////////////////
 
+    /*pointsShader->use();
+    pointsShader->setUniform("u_view", viewMatrix); // remove translation from the view matrix
+    pointsShader->setUniform("u_projection", projMatrix);
+
+    spline->render();
+
+    tessShader->use();
+    tessShader->setUniform("u_view", viewMatrix); // remove translation from the view matrix
+    tessShader->setUniform("u_projection", projMatrix);
+
+    spline->tessellate();*/
+
+    //////////////////////////////////////////////////////////////
+
     // Disable depth and enable blend for text rendering
     glCall(glDisable, GL_DEPTH_TEST);
     glCall(glEnable, GL_BLEND);
     glCall(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    auto& textShader = shaders[2];
 
     textShader->use();
     textShader->setUniform("u_projection", camera.getOrthographicProjectionMatrix());
@@ -304,9 +328,11 @@ void Game::update() {
     if (Input::GetKeyDown(GLFW_KEY_F1))
         window.toggleWireframe();
 
-    if (Input::GetKeyDown(GLFW_KEY_F2)) {
+    if (Input::GetKeyDown(GLFW_KEY_F2))
         darkMode = !darkMode;
-    }
+
+    if (Input::GetKeyDown(GLFW_KEY_E))
+        spline->addPoint(camera.getPosition());
 
     camera.update(dt);
 }

@@ -245,3 +245,41 @@ std::unique_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::
 
     return std::make_unique<Mesh>(std::move(tetrahedron_vertices), std::move(tetrahedron_indices), texture);
 }
+
+std::vector<glm::vec3> geometry::buildSpiralPath(float r1, float r2, float h1, float h2, float turns, int points) {
+    const float PI = acos(-1);
+    std::vector<glm::vec3> vertices;
+    glm::vec3 vertex;
+    float r = r1;
+    float rStep = (r2 - r1) / (points - 1);
+    float y = h1;
+    float yStep = (h2 - h1) / (points - 1);
+    float a = 0;
+    float aStep = (turns * 2 * PI) / (points - 1);
+    for (int i = 0; i < points; ++i) {
+        vertex.x = r * cos(a);
+        vertex.z = r * sin(a);
+        vertex.y = y;
+        vertices.push_back(vertex);
+        // next
+        r += rStep;
+        y += yStep;
+        a += aStep;
+    }
+    return vertices;
+}
+
+std::vector<glm::vec3> geometry::buildCircle(float radius, int steps) {
+    std::vector<glm::vec3> points;
+    if(steps < 2) return points;
+
+    const float PI2 = acos(-1) * 2.0f;
+    float x, y, a;
+    for (int i = 0; i <= steps; ++i) {
+        a = PI2 / steps * i;
+        x = radius * cosf(a);
+        y = radius * sinf(a);
+        points.emplace_back(x, y, 0);
+    }
+    return points;
+}

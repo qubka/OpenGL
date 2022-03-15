@@ -16,6 +16,7 @@
 #include <string>
 #include <stack>
 #include <deque>
+#include <queue>
 #include <array>
 #include <vector>
 #include <utility>

@@ -13,6 +13,8 @@
 #include "lights.hpp"
 #include "textmesh.hpp"
 #include "skybox.hpp"
+#include "catmullrom.hpp"
+#include "pipe.hpp"
 
 #include <entt/entity/registry.hpp>
 
@@ -41,9 +43,9 @@ private:
 
     entt::registry registry;
 
+    Pipe pipe;
     Camera camera;
 	AudioManager audioManager;
-	std::vector<std::unique_ptr<Shader>> shaders;
     DirectionalLight directionalLight;
 	std::vector<SpotLight> spotLights;
 	std::vector<PointLight> pointLights;
@@ -51,6 +53,13 @@ private:
     std::unique_ptr<TextMesh> textMesh;
 	std::unique_ptr<Font> font;
 	std::unique_ptr<Font> icons;
+    //std::unique_ptr<CatmullRom> spline;
+
+    std::unique_ptr<Shader> mainShader;
+    std::unique_ptr<Shader> skyboxShader;
+    std::unique_ptr<Shader> textShader;
+    //std::unique_ptr<Shader> pointsShader;
+    //std::unique_ptr<Shader> tessShader;
 
     bool darkMode{ true };
 

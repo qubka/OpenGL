@@ -14,7 +14,7 @@ public:
     void render(const std::unique_ptr<Shader>& shader) const;
 
 private:
-    GLuint vao, vbo, ibo;
+    GLuint vao, vbo, ebo;
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     std::vector<std::shared_ptr<Texture>> textures;

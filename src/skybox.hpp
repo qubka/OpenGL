@@ -11,7 +11,7 @@ public:
     void render();
 
 private:
-    GLuint vao, vbo, ibo;
+    GLuint vao, vbo, ebo;
     GLint indexCount;
     Cubemap cubemap;
 };

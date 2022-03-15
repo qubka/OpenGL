@@ -10,6 +10,7 @@ namespace glm {
     GLM_INLINE glm::quat quat_cast(const aiQuaternion& q) { return {q.w, q.x, q.y, q.z}; }
     GLM_INLINE glm::mat4 mat4_cast(const aiMatrix4x4& m) { return glm::transpose(glm::make_mat4(&m.a1)); }
     GLM_INLINE glm::mat4 mat4_cast(const aiMatrix3x3& m) { return glm::transpose(glm::make_mat3(&m.a1)); }
+
 }
 
 namespace vec3 {
@@ -20,6 +21,7 @@ namespace vec3 {
     GLM_INLINE glm::vec3 forward = glm::vec3{0,0,1};
     GLM_INLINE glm::vec3 back = glm::vec3{0,0,-1};
     GLM_INLINE glm::vec3 zero = glm::vec3{0,0,0};
+    GLM_INLINE glm::vec3 nan = glm::vec3{NAN, NAN, NAN};
 }
 
 namespace vec2 {
@@ -28,4 +30,5 @@ namespace vec2 {
     GLM_INLINE glm::vec2 up = glm::vec2{0,1};
     GLM_INLINE glm::vec2 down = glm::vec2{0,-1};
     GLM_INLINE glm::vec2 zero = glm::vec2{0,0};
+    GLM_INLINE glm::vec2 nan = glm::vec2{NAN, NAN};
 }

@@ -52,14 +52,14 @@ Skybox::Skybox(const std::array<std::string, 6>& faces) : cubemap{faces} {
 
     glCall(glGenVertexArrays, 1, &vao);
     glCall(glGenBuffers, 1, &vbo);
-    glCall(glGenBuffers, 1, &ibo);
+    glCall(glGenBuffers, 1, &ebo);
 
     glCall(glBindVertexArray, vao);
 
     glCall(glBindBuffer, GL_ARRAY_BUFFER, vbo);
     glCall(glBufferData, GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
 
-    glCall(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glCall(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ebo);
     glCall(glBufferData, GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
     glCall(glEnableVertexAttribArray, 0);
@@ -72,7 +72,7 @@ Skybox::Skybox(const std::array<std::string, 6>& faces) : cubemap{faces} {
 Skybox::~Skybox() {
     glCall(glDeleteVertexArrays, 1, &vao);
     glCall(glDeleteBuffers, 1, &vbo);
-    glCall(glDeleteBuffers, 1, &ibo);
+    glCall(glDeleteBuffers, 1, &ebo);
 }
 
 void Skybox::render() {

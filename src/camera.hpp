@@ -3,7 +3,6 @@
 class Camera {
 public:
 	Camera();										// Constructor - sets default values for camera position, viewvector, upvector, and speed
-	~Camera();										// Destructor
 
     glm::vec3& getPosition();					    // Gets the position of the camera centre of projection
     glm::quat& getRotation();					    // Gets the rotation of the camera
@@ -38,7 +37,7 @@ private:
 	glm::vec3 position{ 0.0f };
 	glm::quat rotation{ 1, 0, 0, 0 };
 
-	float speed{ 0.0f };
+	float speed{ 1.0f };
     float yaw{ 0.0f };
     float pitch{ 0.0f };
 

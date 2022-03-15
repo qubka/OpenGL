@@ -4,12 +4,8 @@
 #include "common.hpp"
 
 // Constructor for camera -- initialise with some default values
-Camera::Camera() {
-    position = glm::vec3{ 0.0f, 10.0f, 100.0f };
-    speed = 50.0f;
+Camera::Camera() : position{0.0f, 10.0f, 100.0f}, speed{50.0f} {
 }
-
-Camera::~Camera() {}
 
 // Update the camera to respond to mouse motion for rotations and keyboard for translation
 void Camera::update(float dt) {
@@ -80,8 +76,7 @@ glm::mat4& Camera::getOrthographicProjectionMatrix() {
 
 // Set the camera perspective projection matrix to produce a view frustum with a specific field of view, aspect ratio,
 // and near / far clipping planes
-void
-Camera::setPerspectiveProjectionMatrix(float fov, float aspectRatio, float nearClippingPlane, float farClippingPlane) {
+void Camera::setPerspectiveProjectionMatrix(float fov, float aspectRatio, float nearClippingPlane, float farClippingPlane) {
     perspectiveProjectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearClippingPlane, farClippingPlane);
 }
 
