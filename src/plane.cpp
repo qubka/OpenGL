@@ -14,7 +14,7 @@ Plane::Plane(const glm::vec3& normal, const glm::vec3& point) {
 
 void Plane::set(const glm::vec4& abcd) {
     normal = glm::vec3{abcd};
-    assert(glm::length2(normal) == 0);
+    assert(glm::length2(normal) != 0);
     d = abcd.w;
 
     // compute distance
@@ -24,7 +24,7 @@ void Plane::set(const glm::vec4& abcd) {
 
 void Plane::set(const glm::vec3& n, const glm::vec3& p) {
     normal = n;
-    assert(glm::length2(normal) == 0);
+    assert(glm::length2(normal) != 0);
     normalLength = glm::length(normal);
     d = -glm::dot(normal, p); // -(a*x0 + b*y0 + c*z0)
     distance = -d / normalLength;

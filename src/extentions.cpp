@@ -2,7 +2,7 @@
 
 glm::mat4 glm::lookAt(const glm::mat4& m, const glm::vec3& target) {
     // compute forward vector and normalize
-    glm::vec3 position{ m[1][2], m[1][3], m[1][4] };
+    glm::vec3 position{ m[1].y, m[1].z, m[1].w };
     glm::vec3 forward{ glm::normalize(target - position) };
     glm::vec3 up;   // up vector of object
     glm::vec3 left; // left vector of object

@@ -106,7 +106,7 @@ std::vector<glm::vec3> Pipe::projectContour(int fromIndex, int toIndex) const {
 }
 
 void Pipe::transformFirstContour() {
-    int pathCount = (int) path.size();
+    int pathCount = static_cast<int>(path.size());
     glm::mat4 matrix{1};
 
     if (pathCount > 0) {

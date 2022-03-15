@@ -5,18 +5,28 @@
 
 #include <assimp/material.h>
 
-Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, std::shared_ptr<Texture> texture)
-    : vertices{std::move(vertices)}
-    , indices{std::move(indices)}
+Mesh::Mesh(std::vector<Vertex>&& vertices, const std::shared_ptr<Texture>& texture, GLenum mode)
+        : vertices{std::move(vertices)}
+        , mode{mode}
 {
     initMesh();
     textures.push_back(texture);
 }
 
-Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, std::vector<std::shared_ptr<Texture>>&& textures)
+Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, const std::shared_ptr<Texture>& texture, GLenum mode)
+    : vertices{std::move(vertices)}
+    , indices{std::move(indices)}
+    , mode{mode}
+{
+    initMesh();
+    textures.push_back(texture);
+}
+
+Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, std::vector<std::shared_ptr<Texture>>&& textures, GLenum mode)
     : vertices{std::move(vertices)}
     , indices{std::move(indices)}
     , textures{std::move(textures)}
+    , mode{mode}
 {
     initMesh();
 }
@@ -24,24 +34,28 @@ Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, std::v
 Mesh::~Mesh() {
     glCall(glDeleteVertexArrays, 1, &vao);
     glCall(glDeleteBuffers, 1, &vbo);
-    glCall(glDeleteBuffers, 1, &ebo);
+    if (!indices.empty())
+        glCall(glDeleteBuffers, 1, &ebo);
 }
 
 void Mesh::initMesh() {
-    if (vertices.empty() || indices.empty())
+    if (vertices.empty())
         assert("Vertices/Indices data buffer is empty");
 
     glCall(glGenVertexArrays, 1, &vao);
     glCall(glGenBuffers, 1, &vbo);
-    glCall(glGenBuffers, 1, &ebo);
+    if (!indices.empty())
+        glCall(glGenBuffers, 1, &ebo);
 
     glCall(glBindVertexArray, vao);
 
     glCall(glBindBuffer, GL_ARRAY_BUFFER, vbo);
     glCall(glBufferData, GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
-    glCall(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glCall(glBufferData, GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+    if (!indices.empty()) {
+        glCall(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glCall(glBufferData, GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+    }
 
     glCall(glEnableVertexAttribArray, 0);
     glCall(glVertexAttribPointer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, position));
@@ -95,7 +109,10 @@ void Mesh::render(const std::unique_ptr<Shader>& shader) const {
     }
 
     glCall(glBindVertexArray, vao);
-    glCall(glDrawElements, GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
+    if (indices.empty())
+        glCall(glDrawArrays, mode, 0, vertices.size());
+    else
+        glCall(glDrawElements, mode, indices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
     glCall(glBindVertexArray, 0);
 
     for (const auto& texture : textures) {

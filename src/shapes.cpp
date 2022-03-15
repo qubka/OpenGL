@@ -1,6 +1,7 @@
 #include "shapes.hpp"
 #include "vertex.hpp"
 #include "mesh.hpp"
+#include "pipe.hpp"
 
 std::unique_ptr<Mesh> geometry::cuboid(const glm::vec3& halfExtents, bool inwards, const std::shared_ptr<Texture>& texture) {
     float orientation = 1;
@@ -196,14 +197,7 @@ std::unique_ptr<Mesh> geometry::octahedron(const glm::vec3& extent, const std::s
         { vertices.at(5),   normals.at(7),   { 0.5f, 1.f } },
     };
 
-    std::vector<uint32_t> octahedron_indices {
-        0,  1,  2,      3,  4,  5,
-        6,  7,  8,      9,  10,  11,
-        12,  13,  14,   15,  16,  17,
-        18,  19,  20,   21,  22,  23,
-    };
-
-    return std::make_unique<Mesh>(std::move(octahedron_vertices), std::move(octahedron_indices), texture);
+    return std::make_unique<Mesh>(std::move(octahedron_vertices), texture);
 }
 
 std::unique_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture) {
@@ -238,27 +232,41 @@ std::unique_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::
         { vertices.at(3),   normals.at(3),    { 0.5f, 1.f } },
     };
 
-    std::vector<uint32_t> tetrahedron_indices {
-        0,  1,  2,     3,  4,  5,
-        6,	7,	8,     9, 10, 11
-    };
-
-    return std::make_unique<Mesh>(std::move(tetrahedron_vertices), std::move(tetrahedron_indices), texture);
+    return std::make_unique<Mesh>(std::move(tetrahedron_vertices), texture);
 }
 
-std::vector<glm::vec3> geometry::buildSpiralPath(float r1, float r2, float h1, float h2, float turns, int points) {
-    const float PI = acos(-1);
+std::unique_ptr<Mesh> geometry::pipe(const Pipe& pipe, const std::shared_ptr<Texture>& texture) {
+    std::vector<Vertex> pipe_vertices;
+
+    // surface
+    for (int i = 0; i < pipe.getContourCount() - 1; ++i) {
+        const std::vector<glm::vec3>& c1 = pipe.getContour(i);
+        const std::vector<glm::vec3>& c2 = pipe.getContour(i + 1);
+        const std::vector<glm::vec3>& n1 = pipe.getNormal(i);
+        const std::vector<glm::vec3>& n2 = pipe.getNormal(i + 1);
+
+        for (int j = 0; j < c2.size(); ++j) {
+            pipe_vertices.emplace_back(c2[j], n2[j], glm::vec2{0});
+            pipe_vertices.emplace_back(c1[j], n1[j], glm::vec2{0});
+        }
+    }
+
+    return std::make_unique<Mesh>(std::move(pipe_vertices), texture, GL_TRIANGLE_STRIP);
+}
+
+std::vector<glm::vec3> shape::spiralPath(float r1, float r2, float h1, float h2, float turns, int points) {
+    const float PI = acosf(-1);
     std::vector<glm::vec3> vertices;
     glm::vec3 vertex;
     float r = r1;
-    float rStep = (r2 - r1) / (points - 1);
+    float rStep = (r2 - r1) / static_cast<float>(points - 1);
     float y = h1;
-    float yStep = (h2 - h1) / (points - 1);
+    float yStep = (h2 - h1) / static_cast<float>(points - 1);
     float a = 0;
-    float aStep = (turns * 2 * PI) / (points - 1);
+    float aStep = (turns * 2 * PI) / static_cast<float>(points - 1);
     for (int i = 0; i < points; ++i) {
-        vertex.x = r * cos(a);
-        vertex.z = r * sin(a);
+        vertex.x = r * cosf(a);
+        vertex.z = r * sinf(a);
         vertex.y = y;
         vertices.push_back(vertex);
         // next
@@ -269,16 +277,16 @@ std::vector<glm::vec3> geometry::buildSpiralPath(float r1, float r2, float h1, f
     return vertices;
 }
 
-std::vector<glm::vec3> geometry::buildCircle(float radius, int steps) {
+std::vector<glm::vec3> shape::circle(const glm::vec2& radius, int steps) {
     std::vector<glm::vec3> points;
     if(steps < 2) return points;
 
-    const float PI2 = acos(-1) * 2.0f;
+    const float PI2 = acosf(-1) * 2.0f;
     float x, y, a;
     for (int i = 0; i <= steps; ++i) {
         a = PI2 / steps * i;
-        x = radius * cosf(a);
-        y = radius * sinf(a);
+        x = radius.x * cosf(a);
+        y = radius.y * sinf(a);
         points.emplace_back(x, y, 0);
     }
     return points;

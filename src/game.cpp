@@ -20,8 +20,16 @@ Game::~Game() {
 void Game::init() {
     // Set the clear colour and depth
     glCall(glClearColor, 1.0f, 1.0f, 1.0f, 1.0f);
+    glCall(glClearStencil, 0);
+    glCall(glClearDepth, 1.0f);
     glCall(glEnable, GL_CULL_FACE);
+    glCall(glEnable, GL_LIGHTING);
+    glCall(glEnable, GL_TEXTURE_2D);
     glCall(glEnable, GL_DEPTH_TEST);
+    glCall(glEnable, GL_COLOR_MATERIAL);
+    glCall(glDepthFunc, GL_LEQUAL);
+    glCall(glShadeModel, GL_SMOOTH);
+    glCall(glPixelStorei, GL_UNPACK_ALIGNMENT, 4);
 
     // Initialise audio and play background music
     audioManager.load("resources/audio/Boing.wav");                    // Royalty free sound from freesound.org
@@ -75,18 +83,17 @@ void Game::init() {
     directionalLight.submit(mainShader);
 
     // generate path for pipe
-    std::vector<glm::vec3> path = geometry::buildSpiralPath(4, 1, -3, 3, 3.5, 200);
+    std::vector<glm::vec3> path = shape::spiralPath(4, 1, -3, 3, 3.5, 200);
     std::cout << "fitst point: " << glm::to_string(path[0]) << std::endl;
     std::cout << "last point: " << glm::to_string(path[path.size()-1]) << std::endl;
 
     // sectional contour of pipe
-    std::vector<glm::vec3> circle = geometry::buildCircle(0.5f, 48); // radius, segments
+    std::vector<glm::vec3> circle = shape::circle({ 0.5f, 0.5f }, 48); // radius, segments
 
     // configure pipe
-    std::vector<glm::vec3> p(1, path[0]);
-    pipe.set(p, circle);
+    pipe.set(path, circle);
 
-
+    pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
 
     // Create entities
 
@@ -192,7 +199,7 @@ void Game::init() {
 // Render method runs repeatedly in a loop
 void Game::render() {
     // Clear the buffers and enable depth testing (z-buffering)
-    glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glCall(glDisable, GL_BLEND);
     glCall(glEnable, GL_DEPTH_TEST);
 
@@ -240,10 +247,14 @@ void Game::render() {
     }
     mainShader->setUniform("lighting_on", true);
 
-    //////////////////////////////////////////////////////////////
+    glCall(glDisable, GL_CULL_FACE);
 
-    // change depth function so depth test passes when values are equal to depth buffer's content
-    glCall(glDepthFunc, GL_LEQUAL);
+    //mainShader->setUniform("u_transform", glm::scale(glm::mat4{1}, glm::vec3{100.0f}));
+    pipeMesh->render(mainShader);
+
+    glCall(glEnable, GL_CULL_FACE);
+
+    //////////////////////////////////////////////////////////////
 
     skyboxShader->use();
     skyboxShader->setUniform("u_view", glm::mat4{glm::mat3{viewMatrix}}); // remove translation from the view matrix
@@ -251,9 +262,6 @@ void Game::render() {
     skyboxShader->setUniform("skybox", 0);
 
     skybox->render();
-
-    // set depth function back to default
-    glCall(glDepthFunc, GL_LESS);
 
     //////////////////////////////////////////////////////////////
 
@@ -331,8 +339,8 @@ void Game::update() {
     if (Input::GetKeyDown(GLFW_KEY_F2))
         darkMode = !darkMode;
 
-    if (Input::GetKeyDown(GLFW_KEY_E))
-        spline->addPoint(camera.getPosition());
+    /*if (Input::GetKeyDown(GLFW_KEY_E))
+        spline->addPoint(camera.getPosition());*/
 
     camera.update(dt);
 }

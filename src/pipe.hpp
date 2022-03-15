@@ -10,14 +10,14 @@ public:
     void setContour(const std::vector<glm::vec3>& contourPoints);
     void addPathPoint(const glm::vec3& point);
 
-    int getPathCount() const                                        { return static_cast<int>(path.size()); }
-    const std::vector<glm::vec3>& getPathPoints() const             { return path; }
-    const glm::vec3& getPathPoint(int index) const                  { return path.at(index); }
-    int getContourCount() const                                     { return static_cast<int>(contours.size()); }
-    const std::vector<std::vector<glm::vec3>>& getContours() const  { return contours; }
-    const std::vector<glm::vec3>& getContour(int index) const       { return contours.at(index); }
-    const std::vector< std::vector<glm::vec3> >& getNormals() const { return normals; }
-    const std::vector<glm::vec3>& getNormal(int index) const        { return normals.at(index); }
+    int getPathCount() const                                       { return static_cast<int>(path.size()); }
+    const std::vector<glm::vec3>& getPathPoints() const            { return path; }
+    const glm::vec3& getPathPoint(int index) const                 { return path.at(index); }
+    int getContourCount() const                                    { return static_cast<int>(contours.size()); }
+    const std::vector<std::vector<glm::vec3>>& getContours() const { return contours; }
+    const std::vector<glm::vec3>& getContour(int index) const      { return contours.at(index); }
+    const std::vector< std::vector<glm::vec3>>& getNormals() const { return normals; }
+    const std::vector<glm::vec3>& getNormal(int index) const       { return normals.at(index); }
 
 private:
     void generateContours();

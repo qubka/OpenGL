@@ -54,6 +54,7 @@ private:
 	std::unique_ptr<Font> font;
 	std::unique_ptr<Font> icons;
     //std::unique_ptr<CatmullRom> spline;
+    std::unique_ptr<Mesh> pipeMesh;
 
     std::unique_ptr<Shader> mainShader;
     std::unique_ptr<Shader> skyboxShader;

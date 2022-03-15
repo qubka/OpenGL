@@ -1,5 +1,6 @@
 #pragma once
 
+class Pipe;
 class Mesh;
 class Texture;
 
@@ -9,7 +10,10 @@ namespace geometry {
     std::unique_ptr<Mesh> quad(const glm::vec2& extent, const std::shared_ptr<Texture>& texture);
     std::unique_ptr<Mesh> octahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture);
     std::unique_ptr<Mesh> tetrahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture);
+    std::unique_ptr<Mesh> pipe(const Pipe& pipe, const std::shared_ptr<Texture>& texture);
+}
 
-    std::vector<glm::vec3> buildSpiralPath(float r1, float r2, float h1, float h2, float turns, int points);
-    std::vector<glm::vec3> buildCircle(float radius, int steps);
+namespace shape {
+    std::vector<glm::vec3> spiralPath(float r1, float r2, float h1, float h2, float turns, int points);
+    std::vector<glm::vec3> circle(const glm::vec2& radius, int steps);
 }
