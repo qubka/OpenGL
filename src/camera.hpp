@@ -1,17 +1,20 @@
 #pragma once
 
+#include "common.hpp"
+
 class Camera {
 public:
-	Camera();										// Constructor - sets default values for camera position, viewvector, upvector, and speed
+	Camera(); // Constructor - sets default values for camera position, viewvector, upvector, and speed
 
-    glm::vec3& getPosition();					    // Gets the position of the camera centre of projection
-    glm::quat& getRotation();					    // Gets the rotation of the camera
-    glm::vec3 getUpVector() const;					// Gets the camera up vector
-    glm::vec3 getForwardVector() const;				// Gets the camera forward vector
-    glm::vec3 getRightVector() const;				// Gets the camera right vector
-    glm::mat4 getViewMatrix() const;				// Gets the camera view
-    glm::mat4& getPerspectiveProjectionMatrix();	// Gets the camera perspective projection matrix
-	glm::mat4& getOrthographicProjectionMatrix();	// Gets the camera orthographic projection matrix
+    const glm::vec3& getPosition() { return position; }					    // Gets the position of the camera centre of projection
+    void setPosition(const glm::vec3& pos) { position = pos; }
+    const glm::quat& getRotation() { return rotation; }					    // Gets the rotation of the camera
+    void setRotation(const glm::quat& rot) { rotation = rot; }
+    glm::vec3 getUpVector() const { return rotation * vec3::up; }			// Gets the camera up vector
+    glm::vec3 getForwardVector() const { return rotation * vec3::back; }	// Gets the camera forward vector
+    glm::vec3 getRightVector() const { return rotation * vec3::right; }		// Gets the camera right vector
+    const glm::mat4& getPerspectiveProjectionMatrix() const { return perspectiveProjectionMatrix; }	  // Gets the camera perspective projection matrix
+    const glm::mat4& getOrthographicProjectionMatrix() const { return orthographicProjectionMatrix; } // Gets the camera orthographic projection matrix
 
 	// Respond to mouse movement to rotate the camera
 	void setViewByMouse();
@@ -21,6 +24,9 @@ public:
 
 	// Update the camera
 	void update(float dt);
+
+    // Gets the camera view
+    glm::mat4 getViewMatrix() const;
 
 	// Set the projection matrices
 	void setPerspectiveProjectionMatrix(float fov, float aspectRatio, float nearClippingPlane, float farClippingPlane);

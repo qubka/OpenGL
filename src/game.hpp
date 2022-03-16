@@ -14,7 +14,6 @@
 #include "textmesh.hpp"
 #include "skybox.hpp"
 #include "catmullrom.hpp"
-#include "pipe.hpp"
 
 #include <entt/entity/registry.hpp>
 
@@ -43,7 +42,6 @@ private:
 
     entt::registry registry;
 
-    Pipe pipe;
     Camera camera;
 	AudioManager audioManager;
     DirectionalLight directionalLight;
@@ -53,13 +51,12 @@ private:
     std::unique_ptr<TextMesh> textMesh;
 	std::unique_ptr<Font> font;
 	std::unique_ptr<Font> icons;
-    std::unique_ptr<Mesh> pipeMesh;
+    std::unique_ptr<CatmullRom> catmullRom;
 
     std::unique_ptr<Shader> mainShader;
     std::unique_ptr<Shader> skyboxShader;
     std::unique_ptr<Shader> textShader;
-    //std::unique_ptr<Shader> pointsShader;
-    //std::unique_ptr<Shader> tessShader;
+    std::unique_ptr<Shader> splineShader;
 
     bool darkMode{ true };
 

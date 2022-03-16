@@ -26,7 +26,7 @@ bool AudioManager::load(const std::string& path) {
     return true;
 }
 
-void AudioManager::play(const std::string& path, const glm::vec3& position) {
+void AudioManager::play(const std::string& path) {
     if (auto it = sounds.find(path); it != sounds.end()) {
         auto& sound{ *it->second };
         sound.play();

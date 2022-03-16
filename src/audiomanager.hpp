@@ -10,7 +10,7 @@ public:
 
     bool load(const std::string& path);
 
-    void play(const std::string& path, const glm::vec3& position);
+    void play(const std::string& path);
     void stop(const std::string& path);
 
 private:

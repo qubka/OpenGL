@@ -1,7 +1,6 @@
 #include "geometry.hpp"
 #include "vertex.hpp"
 #include "mesh.hpp"
-#include "pipe.hpp"
 
 std::unique_ptr<Mesh> geometry::cuboid(const glm::vec3& halfExtents, bool inwards, const std::shared_ptr<Texture>& texture) {
     float orientation = 1;
@@ -230,26 +229,17 @@ std::unique_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::
     return std::make_unique<Mesh>(std::move(tetrahedron_vertices), texture);
 }
 
-std::unique_ptr<Mesh> geometry::pipe(const Pipe& pipe, const std::shared_ptr<Texture>& texture) {
-    std::vector<Vertex> pipe_vertices;
+std::unique_ptr<Mesh> geometry::line(const std::vector<glm::vec3>& points, const std::shared_ptr<Texture>& texture) {
+    std::vector<Vertex> line_vertices;
 
-    // surface
-    for (int i = 0; i < pipe.getContourCount() - 1; ++i) {
-        const std::vector<glm::vec3>& c1 = pipe.getContour(i);
-        const std::vector<glm::vec3>& c2 = pipe.getContour(i + 1);
-        const std::vector<glm::vec3>& n1 = pipe.getNormal(i);
-        const std::vector<glm::vec3>& n2 = pipe.getNormal(i + 1);
-
-        for (int j = 0; j < c2.size(); ++j) {
-            pipe_vertices.emplace_back(c2[j], n2[j], glm::vec2{0});
-            pipe_vertices.emplace_back(c1[j], n1[j], glm::vec2{0});
-        }
+    for (auto& p : points) {
+        line_vertices.emplace_back(p, glm::vec3{1}, glm::vec2{0});
     }
 
-    return std::make_unique<Mesh>(std::move(pipe_vertices), texture, GL_TRIANGLE_STRIP);
+    return std::make_unique<Mesh>(std::move(line_vertices), texture, GL_LINE_LOOP);
 }
 
-std::vector<glm::vec3> shape::circle(const glm::vec2& radius, int steps) {
+std::vector<glm::vec3> geometry::circle(const glm::vec2& radius, int steps) {
     std::vector<glm::vec3> points;
     if (steps < 2) return points;
 

@@ -3,7 +3,6 @@
 #include "components.hpp"
 #include "geometry.hpp"
 #include "texture.hpp"
-#include "curve.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -35,7 +34,7 @@ void Game::init() {
     // Initialise audio and play background music
     audioManager.load("resources/audio/Boing.wav");                    // Royalty free sound from freesound.org
     audioManager.load("resources/audio/fsm-team-escp-paradox.wav");    // Royalty free sound from freesound.org
-    audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
+    //audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
 
     mainShader = std::make_unique<Shader>();
     mainShader->link("resources/shaders/mainShader.vert", "resources/shaders/mainShader.frag");
@@ -136,15 +135,20 @@ void Game::init() {
 
     // generate path for pipe
 
-    Curve curve;
-    std::vector<glm::vec3> points{ { 50.0f, 10.0f, 150.0f }, { 80.0f, 50.0f, 180.0f }, { 20.0f, 30.0f, 110.0f } , { 20.0f, 30.0f, 110.0f } };
-    curve.samplePoints(points, 10, 1000, 0.33f);
+    std::vector<glm::vec3> points;
+    points.emplace_back(100, 5, 0);
+    points.emplace_back(71, 5, 71);
+    points.emplace_back(0, 5, 100);
+    points.emplace_back(-71, 20, 71);
+    points.emplace_back(-100, 5, 0);
+    points.emplace_back(-71, 5, -71);
+    points.emplace_back(0, 40, -100);
+    points.emplace_back(71, 50, -71);
 
-    pipe.set(curve.getDrawingPoints2(), shape::circle({ 1.0f, 1.0f }, 48));
+    catmullRom = std::make_unique<CatmullRom>(std::move(points), 500);
 
-    //pipe.set({camera.getPosition()}, shape::circle({ 0.5f, 0.5f }, 48));
-    pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
-
+    //pipe.set(catmullRom->centrelinePoints, geometry::circle({0.5f, 0.5f}, 48));
+    //pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
     //////////////////////////////////////////////////////////////
 
     // Create cubemap skybox
@@ -163,16 +167,8 @@ void Game::init() {
 
     //////////////////////////////////////////////////////////////
 
-    /*tessShader = std::make_unique<Shader>();
-    tessShader->link("resources/shaders/splineShader.vert",
-                       "resources/shaders/splineShader.frag",
-                       "resources/shaders/splineShader.tesc",
-                       "resources/shaders/splineShader.tese");
-
-    pointsShader = std::make_unique<Shader>();
-    pointsShader->link("resources/shaders/splineShader.vert", "resources/shaders/splineShader.frag");
-
-    spline = std::make_unique<CatmullRom>();*/
+    splineShader = std::make_unique<Shader>();
+    splineShader->link("resources/shaders/splineShader.vert", "resources/shaders/splineShader.frag");
 
     //////////////////////////////////////////////////////////////
 
@@ -205,10 +201,11 @@ void Game::render() {
     // Get camera view and proj matricies
     auto viewMatrix = camera.getViewMatrix();
     auto projMatrix = camera.getPerspectiveProjectionMatrix();
+    auto viewProjMatrix = projMatrix * viewMatrix;
 
     // Use the main shader program
     mainShader->use();
-    mainShader->setUniform("u_view_projection", projMatrix * viewMatrix);
+    mainShader->setUniform("u_view_projection", viewProjMatrix);
     mainShader->setUniform("gEyeWorldPos", camera.getPosition());
     mainShader->setUniform("fog_on", darkMode);
     directionalLight.ambientIntensity = darkMode ? 0.15f : 1.0f;
@@ -246,36 +243,20 @@ void Game::render() {
     }
     mainShader->setUniform("lighting_on", true);
 
-    glCall(glDisable, GL_CULL_FACE);
-
-    mainShader->setUniform("u_transform", glm::mat4{1});
-    mainShader->setUniform("u_normal", glm::transpose(glm::inverse(glm::mat3{glm::mat4{1}})));
-    pipeMesh->render(mainShader);
-
-    glCall(glEnable, GL_CULL_FACE);
-
     //////////////////////////////////////////////////////////////
 
     skyboxShader->use();
-    skyboxShader->setUniform("u_view", glm::mat4{glm::mat3{viewMatrix}}); // remove translation from the view matrix
-    skyboxShader->setUniform("u_projection", projMatrix);
+    skyboxShader->setUniform("u_view_projection", projMatrix * glm::mat4{glm::mat3{viewMatrix}}); // remove translation from the view matrix
     skyboxShader->setUniform("skybox", 0);
 
     skybox->render();
 
     //////////////////////////////////////////////////////////////
 
-    /*pointsShader->use();
-    pointsShader->setUniform("u_view", viewMatrix); // remove translation from the view matrix
-    pointsShader->setUniform("u_projection", projMatrix);
+    splineShader->use();
+    splineShader->setUniform("u_view_projection", viewProjMatrix);
 
-    spline->render();
-
-    tessShader->use();
-    tessShader->setUniform("u_view", viewMatrix); // remove translation from the view matrix
-    tessShader->setUniform("u_projection", projMatrix);
-
-    spline->tessellate();*/
+    catmullRom->render(splineShader);
 
     //////////////////////////////////////////////////////////////
 
@@ -339,10 +320,10 @@ void Game::update() {
     if (Input::GetKeyDown(GLFW_KEY_F2))
         darkMode = !darkMode;
 
-    if (Input::GetKeyDown(GLFW_KEY_E)) {
+    /*if (Input::GetKeyDown(GLFW_KEY_E)) {
         pipe.addPathPoint(camera.getPosition());
         pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
-    }
+    }*/
 
     camera.update(dt);
 }

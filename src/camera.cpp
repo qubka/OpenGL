@@ -1,7 +1,6 @@
 #include "camera.hpp"
 #include "window.hpp"
 #include "input.hpp"
-#include "common.hpp"
 
 // Constructor for camera -- initialise with some default values
 Camera::Camera() : position{0.0f, 10.0f, 100.0f}, speed{50.0f} {
@@ -49,29 +48,9 @@ void Camera::translateByKeyboard(float dt) {
         position -= getRightVector() * speed * dt;
 }
 
-// Return the camera position
-glm::vec3& Camera::getPosition() {
-    return position;
-}
-
-// Return the camera rotation
-glm::quat& Camera::getRotation() {
-    return rotation;
-}
-
 // Return the camera view
 glm::mat4 Camera::getViewMatrix() const {
     return glm::lookAt(position, position + getForwardVector(), getUpVector());
-}
-
-// Return the camera perspective projection matrix
-glm::mat4& Camera::getPerspectiveProjectionMatrix() {
-    return perspectiveProjectionMatrix;
-}
-
-// Return the camera orthographic projection matrix
-glm::mat4& Camera::getOrthographicProjectionMatrix() {
-    return orthographicProjectionMatrix;
 }
 
 // Set the camera perspective projection matrix to produce a view frustum with a specific field of view, aspect ratio,
@@ -83,16 +62,4 @@ void Camera::setPerspectiveProjectionMatrix(float fov, float aspectRatio, float 
 // The the camera orthographic projection matrix to match the width and height passed in
 void Camera::setOrthographicProjectionMatrix(int width, int height) {
     orthographicProjectionMatrix = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height));
-}
-
-glm::vec3 Camera::getUpVector() const {
-    return rotation * vec3::up;
-}
-
-glm::vec3 Camera::getForwardVector() const {
-    return rotation * vec3::back;
-}
-
-glm::vec3 Camera::getRightVector() const {
-    return rotation * vec3::right;
 }

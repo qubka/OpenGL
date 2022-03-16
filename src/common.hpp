@@ -20,8 +20,9 @@ namespace vec3 {
     GLM_INLINE glm::vec3 down = glm::vec3{0,-1,0};
     GLM_INLINE glm::vec3 forward = glm::vec3{0,0,1};
     GLM_INLINE glm::vec3 back = glm::vec3{0,0,-1};
-    GLM_INLINE glm::vec3 zero = glm::vec3{0,0,0};
-    GLM_INLINE glm::vec3 nan = glm::vec3{NAN, NAN, NAN};
+
+    GLM_INLINE glm::vec3 zero = glm::vec3{0};
+    GLM_INLINE glm::vec3 nan = glm::vec3{NAN};
 }
 
 namespace vec2 {
@@ -29,6 +30,7 @@ namespace vec2 {
     GLM_INLINE glm::vec2 left = glm::vec2{-1,0};
     GLM_INLINE glm::vec2 up = glm::vec2{0,1};
     GLM_INLINE glm::vec2 down = glm::vec2{0,-1};
-    GLM_INLINE glm::vec2 zero = glm::vec2{0,0};
-    GLM_INLINE glm::vec2 nan = glm::vec2{NAN, NAN};
+
+    GLM_INLINE glm::vec2 zero = glm::vec2{0};
+    GLM_INLINE glm::vec2 nan = glm::vec2{NAN};
 }
