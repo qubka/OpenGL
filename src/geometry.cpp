@@ -1,4 +1,4 @@
-#include "shapes.hpp"
+#include "geometry.hpp"
 #include "vertex.hpp"
 #include "mesh.hpp"
 #include "pipe.hpp"
@@ -142,12 +142,7 @@ std::unique_ptr<Mesh> geometry::quad(const glm::vec2& extent, const std::shared_
         { vertices.at(5),  { 1.f, 1.f, 1.f },  { 0.0f, 1.f } },
     };
 
-    std::vector<uint32_t> quad_indices {
-        0,  1,  2,
-        3,  4,  5,
-    };
-
-    return std::make_unique<Mesh>(std::move(quad_vertices), std::move(quad_indices), texture);
+    return std::make_unique<Mesh>(std::move(quad_vertices), texture);
 }
 
 std::unique_ptr<Mesh> geometry::octahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture) {
@@ -254,39 +249,15 @@ std::unique_ptr<Mesh> geometry::pipe(const Pipe& pipe, const std::shared_ptr<Tex
     return std::make_unique<Mesh>(std::move(pipe_vertices), texture, GL_TRIANGLE_STRIP);
 }
 
-std::vector<glm::vec3> shape::spiralPath(float r1, float r2, float h1, float h2, float turns, int points) {
-    const float PI = acosf(-1);
-    std::vector<glm::vec3> vertices;
-    glm::vec3 vertex;
-    float r = r1;
-    float rStep = (r2 - r1) / static_cast<float>(points - 1);
-    float y = h1;
-    float yStep = (h2 - h1) / static_cast<float>(points - 1);
-    float a = 0;
-    float aStep = (turns * 2 * PI) / static_cast<float>(points - 1);
-    for (int i = 0; i < points; ++i) {
-        vertex.x = r * cosf(a);
-        vertex.z = r * sinf(a);
-        vertex.y = y;
-        vertices.push_back(vertex);
-        // next
-        r += rStep;
-        y += yStep;
-        a += aStep;
-    }
-    return vertices;
-}
-
 std::vector<glm::vec3> shape::circle(const glm::vec2& radius, int steps) {
     std::vector<glm::vec3> points;
-    if(steps < 2) return points;
+    if (steps < 2) return points;
 
     const float PI2 = acosf(-1) * 2.0f;
-    float x, y, a;
     for (int i = 0; i <= steps; ++i) {
-        a = PI2 / steps * i;
-        x = radius.x * cosf(a);
-        y = radius.y * sinf(a);
+        float a = PI2 / steps * i;
+        float x = radius.x * cosf(a);
+        float y = radius.y * sinf(a);
         points.emplace_back(x, y, 0);
     }
     return points;

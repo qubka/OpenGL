@@ -8,6 +8,7 @@ class Texture;
 class Mesh {
 public:
     Mesh(std::vector<Vertex>&& vertices, const std::shared_ptr<Texture>& texture, GLenum mode = GL_TRIANGLES);
+    Mesh(std::vector<Vertex>&& vertices, std::vector<std::shared_ptr<Texture>>&& textures, GLenum mode = GL_TRIANGLES);
     Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, const std::shared_ptr<Texture>& texture, GLenum mode = GL_TRIANGLES);
     Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, std::vector<std::shared_ptr<Texture>>&& textures, GLenum mode = GL_TRIANGLES);
     ~Mesh();

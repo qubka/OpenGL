@@ -34,3 +34,26 @@ glm::mat4 glm::lookAt(const glm::mat4& m, const glm::vec3& target) {
         0, 0, 0, 0
     };
 }
+
+void glm::lookAtFromDirection(const glm::vec3& dir, glm::vec3& forward, glm::vec3& up, glm::vec3& right) {
+    forward = glm::normalize(dir);
+
+    glm::vec3 projectedDir = dir;
+
+    if (std::fabs(dir[0]) < FLT_EPSILON && std::fabs(dir[2]) < FLT_EPSILON) {
+        projectedDir.x = 0;
+        projectedDir = glm::normalize(projectedDir);
+
+        up = glm::cross(projectedDir, { 1, 0, 0});
+        right = glm::cross(forward, up);
+    } else {
+        projectedDir.y = 0;
+        projectedDir = glm::normalize(projectedDir);
+
+        right = -glm::cross(projectedDir, {0, 1, 0});
+        up = glm::cross(forward, right);
+    }
+
+    right = glm::normalize(right);
+    up = glm::normalize(up);
+}

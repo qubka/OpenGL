@@ -6,11 +6,19 @@
 #include <assimp/material.h>
 
 Mesh::Mesh(std::vector<Vertex>&& vertices, const std::shared_ptr<Texture>& texture, GLenum mode)
-        : vertices{std::move(vertices)}
-        , mode{mode}
+    : vertices{std::move(vertices)}
+    , mode{mode}
 {
     initMesh();
     textures.push_back(texture);
+}
+
+Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<std::shared_ptr<Texture>>&& textures, GLenum mode)
+    : vertices{std::move(vertices)}
+    , textures{std::move(textures)}
+    , mode{mode}
+{
+    initMesh();
 }
 
 Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices, const std::shared_ptr<Texture>& texture, GLenum mode)

@@ -14,6 +14,5 @@ namespace geometry {
 }
 
 namespace shape {
-    std::vector<glm::vec3> spiralPath(float r1, float r2, float h1, float h2, float turns, int points);
     std::vector<glm::vec3> circle(const glm::vec2& radius, int steps);
 }

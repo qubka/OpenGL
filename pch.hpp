@@ -44,3 +44,5 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/norm.hpp>
 #include "glm/gtx/hash.hpp"
+#include <glm/gtx/spline.hpp>
+#include <glm/gtx/rotate_vector.hpp>

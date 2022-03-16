@@ -1,8 +1,9 @@
 #include "game.hpp"
 #include "font.hpp"
 #include "components.hpp"
-#include "shapes.hpp"
+#include "geometry.hpp"
 #include "texture.hpp"
+#include "curve.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -82,19 +83,6 @@ void Game::init() {
     mainShader->setUniform("gNumSpotLights", static_cast<int>(spotLights.size()));
     directionalLight.submit(mainShader);
 
-    // generate path for pipe
-    std::vector<glm::vec3> path = shape::spiralPath(4, 1, -3, 3, 3.5, 200);
-    std::cout << "fitst point: " << glm::to_string(path[0]) << std::endl;
-    std::cout << "last point: " << glm::to_string(path[path.size()-1]) << std::endl;
-
-    // sectional contour of pipe
-    std::vector<glm::vec3> circle = shape::circle({ 0.5f, 0.5f }, 48); // radius, segments
-
-    // configure pipe
-    pipe.set(path, circle);
-
-    pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
-
     // Create entities
 
     auto entity = registry.create();
@@ -145,6 +133,17 @@ void Game::init() {
     entity = registry.create();
     registry.emplace<TransformComponent>(entity, glm::vec3{50.0f, 10.0f, 150.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{4.0f});
     registry.emplace<MeshComponent>(entity, std::move(mesh));
+
+    // generate path for pipe
+
+    Curve curve;
+    std::vector<glm::vec3> points{ { 50.0f, 10.0f, 150.0f }, { 80.0f, 50.0f, 180.0f }, { 20.0f, 30.0f, 110.0f } , { 20.0f, 30.0f, 110.0f } };
+    curve.samplePoints(points, 10, 1000, 0.33f);
+
+    pipe.set(curve.getDrawingPoints2(), shape::circle({ 1.0f, 1.0f }, 48));
+
+    //pipe.set({camera.getPosition()}, shape::circle({ 0.5f, 0.5f }, 48));
+    pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
 
     //////////////////////////////////////////////////////////////
 
@@ -249,7 +248,8 @@ void Game::render() {
 
     glCall(glDisable, GL_CULL_FACE);
 
-    //mainShader->setUniform("u_transform", glm::scale(glm::mat4{1}, glm::vec3{100.0f}));
+    mainShader->setUniform("u_transform", glm::mat4{1});
+    mainShader->setUniform("u_normal", glm::transpose(glm::inverse(glm::mat3{glm::mat4{1}})));
     pipeMesh->render(mainShader);
 
     glCall(glEnable, GL_CULL_FACE);
@@ -339,8 +339,10 @@ void Game::update() {
     if (Input::GetKeyDown(GLFW_KEY_F2))
         darkMode = !darkMode;
 
-    /*if (Input::GetKeyDown(GLFW_KEY_E))
-        spline->addPoint(camera.getPosition());*/
+    if (Input::GetKeyDown(GLFW_KEY_E)) {
+        pipe.addPathPoint(camera.getPosition());
+        pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
+    }
 
     camera.update(dt);
 }
