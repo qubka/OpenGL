@@ -10,6 +10,4 @@ namespace geometry {
     std::unique_ptr<Mesh> octahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture);
     std::unique_ptr<Mesh> tetrahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture);
     std::unique_ptr<Mesh> line(const std::vector<glm::vec3>& points, const std::shared_ptr<Texture>& texture);
-
-    std::vector<glm::vec3> circle(const glm::vec2& radius, int steps);
 }

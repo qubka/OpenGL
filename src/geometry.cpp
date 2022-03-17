@@ -238,17 +238,3 @@ std::unique_ptr<Mesh> geometry::line(const std::vector<glm::vec3>& points, const
 
     return std::make_unique<Mesh>(std::move(line_vertices), texture, GL_LINE_LOOP);
 }
-
-std::vector<glm::vec3> geometry::circle(const glm::vec2& radius, int steps) {
-    std::vector<glm::vec3> points;
-    if (steps < 2) return points;
-
-    const float PI2 = acosf(-1) * 2.0f;
-    for (int i = 0; i <= steps; ++i) {
-        float a = PI2 / steps * i;
-        float x = radius.x * cosf(a);
-        float y = radius.y * sinf(a);
-        points.emplace_back(x, y, 0);
-    }
-    return points;
-}
