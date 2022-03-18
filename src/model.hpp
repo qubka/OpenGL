@@ -18,7 +18,7 @@ public:
     ~Model() = default;
 
     static void Create(const std::string& path, const std::unique_ptr<Mesh>& mesh, const std::string& format = "fbx");
-    static std::unique_ptr<Model> Load(const std::filesystem::path& path);
+    static std::shared_ptr<Model> Load(const std::filesystem::path& path);
 
     void render(const std::unique_ptr<Shader>& shader) const;
 

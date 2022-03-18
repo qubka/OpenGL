@@ -5,6 +5,13 @@
 
 #include <assimp/material.h>
 
+Mesh::Mesh(std::vector<Vertex>&& vertices, GLenum mode)
+    : vertices{std::move(vertices)}
+    , mode{mode}
+{
+    initMesh();
+}
+
 Mesh::Mesh(std::vector<Vertex>&& vertices, const std::shared_ptr<Texture>& texture, GLenum mode)
     : vertices{std::move(vertices)}
     , mode{mode}
@@ -97,15 +104,12 @@ void Mesh::render(const std::unique_ptr<Shader>& shader) const {
             case aiTextureType_SPECULAR:
                 name = "specular" + std::to_string(specularIdx++);
                 break;
-
             case aiTextureType_HEIGHT:
                 name = "height" + std::to_string(heightIdx++);
                 break;
-
             case aiTextureType_AMBIENT:
                 name = "ambient" + std::to_string(ambientIdx++);
                 break;
-
             default:
                 assert("Unknown texture type");
                 return;
@@ -116,15 +120,19 @@ void Mesh::render(const std::unique_ptr<Shader>& shader) const {
         texture->bind(i);
     }
 
+    render();
+
+    for (const auto& texture : textures) {
+        texture->unbind();
+    }
+    glCall(glActiveTexture, GL_TEXTURE0);
+}
+
+void Mesh::render() const {
     glCall(glBindVertexArray, vao);
     if (indices.empty())
         glCall(glDrawArrays, mode, 0, vertices.size());
     else
         glCall(glDrawElements, mode, indices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
     glCall(glBindVertexArray, 0);
-
-    for (const auto& texture : textures) {
-        texture->unbind();
-    }
-    glCall(glActiveTexture, GL_TEXTURE0);
 }

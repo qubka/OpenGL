@@ -2,28 +2,10 @@
 #include "opengl.hpp"
 #include "common.hpp"
 
-CatmullRom::CatmullRom(std::vector<glm::vec3>&& points, int numSamples) : controlPoints{std::move(points)} {
-    uniformlySampleControlPoints(numSamples);
-    generateTubeSurface(5.0f, 36);
-
-    glCall(glGenVertexArrays, 1, &vao);
-    glCall(glGenBuffers, 1, &vbo);
-
-    glCall(glBindVertexArray, vao);
-
-    glCall(glBindBuffer, GL_ARRAY_BUFFER, vbo);
-    glCall(glBufferData, GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
-
-    glCall(glEnableVertexAttribArray, 0);
-    glCall(glVertexAttribPointer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
-
-    glCall(glBindBuffer, GL_ARRAY_BUFFER, 0);
-    glCall(glBindVertexArray, 0);
+CatmullRom::CatmullRom() {
 }
 
 CatmullRom::~CatmullRom() {
-    glCall(glDeleteVertexArrays, 1, &vao);
-    glCall(glDeleteBuffers, 1, &vbo);
 }
 
 // Determine lengths along the control points, which is the set of control points forming the closed curve
@@ -43,7 +25,7 @@ void CatmullRom::computeLengthsAlongControlPoints() {
 }
 
 // Return the point (and upvector, if control upvectors provided) based on a distance d along the control polygon
-bool CatmullRom::sample(float d, glm::vec3& p) {
+bool CatmullRom::sample(float d, glm::vec3& p, glm::vec3& n) const {
     if (d < 0)
         return false;
 
@@ -78,16 +60,35 @@ bool CatmullRom::sample(float d, glm::vec3& p) {
     int next = (j + 1) % M;
     int nextNext = (j + 2) % M;
 
+    auto& v1 = controlPoints[prev];
+    auto& v2 = controlPoints[cur];
+    auto& v3 = controlPoints[next];
+    auto& v4 = controlPoints[nextNext];
+
     // Interpolate to get the point
-    p = glm::catmullRom(controlPoints[prev], controlPoints[cur], controlPoints[next], controlPoints[nextNext], t);
+    p = glm::catmullRom(v1, v2, v3, v4, t);
+    n = glm::normalize(v2 - v1);
 
     return true;
 }
 
 // Sample a set of control points using an open Catmull-Rom spline, to produce a set of iNumSamples that are (roughly) equally spaced
-void CatmullRom::uniformlySampleControlPoints(int numSamples) {
-    glm::vec3 p;
+void CatmullRom::uniformlySampleControlPoints(std::vector<glm::vec3>&& points, int numSamples) {
+    controlPoints = points;
 
+    uniformSample(numSamples);
+
+    // Repeat once more for truly equidistant points
+    controlPoints = centrelinePoints;
+    centrelinePoints.clear();
+    centrelineNormals.clear();
+    distances.clear();
+
+    uniformSample(numSamples);
+}
+
+// Sample a set of control points
+void CatmullRom::uniformSample(int numSamples) {
     // Compute the lengths of each segment along the control polygon, and the total length
     computeLengthsAlongControlPoints();
     float totalLength = distances.back();
@@ -96,66 +97,11 @@ void CatmullRom::uniformlySampleControlPoints(int numSamples) {
     float spacing = totalLength / numSamples;
 
     // Call PointAt to sample the spline, to generate the points
+    glm::vec3 p, n;
     for (int i = 0; i < numSamples; i++) {
-        if (sample(i * spacing, p)) {
+        if (sample(i * spacing, p, n)) {
             centrelinePoints.push_back(p);
-        }
-    }
-
-    // Repeat once more for truly equidistant points
-    controlPoints = centrelinePoints;
-    centrelinePoints.clear();
-    distances.clear();
-    computeLengthsAlongControlPoints();
-    totalLength = distances.back();
-    spacing = totalLength / numSamples;
-    for (int i = 0; i < numSamples; i++) {
-        if (sample(i * spacing, p)) {
-            centrelinePoints.push_back(p);
-        }
-    }
-}
-
-void CatmullRom::render(const std::unique_ptr<Shader>& shader) const {
-    glCall(glBindVertexArray, vao);
-    glCall(glPointSize, 7);
-    glCall(glDrawArrays, GL_POINTS, 0, vertices.size());
-    glCall(glBindVertexArray, 0);
-}
-
-// https://www.google.com/search?q=Point+Orbit+a+Line,+3D+%5Bclosed%5D&client=firefox-b-d&tbm=isch&source=lnms&sa=X&ved=0ahUKEwju1t3Jxcv2AhVBhlwKHTDSBagQ_AUI3AEoAQ&biw=1115&bih=604&dpr=2.07
-// https://stackoverflow.com/questions/33402176/render-circles-along-a-3d-curves
-// https://stackoverflow.com/questions/27714014/3d-point-on-circumference-of-a-circle-with-a-center-radius-and-normal-vector
-
-void CatmullRom::generateTubeSurface(float radius, int steps) {
-    std::vector<glm::vec2> points;
-    points.reserve(steps+1);
-
-    int i;
-    float a, da = M_PI * 2.0f / steps;
-    for (a = 0.0, i = 0; i <= steps; ++i, a += da) {
-        points.emplace_back(
-            radius * cosf(a),
-            radius * sinf(a)
-        );
-    }
-
-    // https://blackpawn.com/texts/pqtorus/
-    int count = static_cast<int>(centrelinePoints.size());
-    for (int i = 0; i < count - 1; i++) {
-        auto curr = centrelinePoints[i];
-        auto next = centrelinePoints[i + 1];
-
-        glm::vec3 T = glm::normalize(next - curr);
-        glm::vec3 B = glm::normalize(glm::cross(T, next + curr));
-        glm::vec3 N = glm::normalize(glm::cross(B, T));
-
-        for (auto& p : points) {
-            glm::vec3 tangent = T;
-            glm::vec3 normal = glm::normalize( B * p.x + N * p.y );
-            glm::vec3 vertex = curr + B * p.x + N * p.y; // note: not normalized!
-
-            vertices.push_back(vertex);
+            centrelineNormals.push_back(n);
         }
     }
 }

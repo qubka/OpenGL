@@ -2,7 +2,7 @@
 #include "vertex.hpp"
 #include "mesh.hpp"
 
-std::unique_ptr<Mesh> geometry::cuboid(const glm::vec3& halfExtents, bool inwards, const std::shared_ptr<Texture>& texture) {
+std::shared_ptr<Mesh> geometry::cuboid(const glm::vec3& halfExtents, bool inwards, const std::shared_ptr<Texture>& texture) {
     float orientation = 1;
     if (inwards)
         orientation = -1;
@@ -55,10 +55,10 @@ std::unique_ptr<Mesh> geometry::cuboid(const glm::vec3& halfExtents, bool inward
         20, 21, 22,		20, 22, 23   //bottom
     };
 
-    return std::make_unique<Mesh>(std::move(cuboid_vertices), std::move(cuboid_indices), texture);
+    return std::make_shared<Mesh>(std::move(cuboid_vertices), std::move(cuboid_indices), texture);
 }
 
-std::unique_ptr<Mesh> geometry::sphere(uint32_t stacks, uint32_t slices, float radius, const std::shared_ptr<Texture>& texture) {
+std::shared_ptr<Mesh> geometry::sphere(uint32_t stacks, uint32_t slices, float radius, const std::shared_ptr<Texture>& texture) {
     std::vector<Vertex> sphere_vertices;
     std::vector<uint32_t> sphere_indices;
 
@@ -119,17 +119,18 @@ std::unique_ptr<Mesh> geometry::sphere(uint32_t stacks, uint32_t slices, float r
         }
     }
 
-    return std::make_unique<Mesh>(std::move(sphere_vertices), std::move(sphere_indices), texture);
+    return std::make_shared<Mesh>(std::move(sphere_vertices), std::move(sphere_indices), texture);
 }
 
-std::unique_ptr<Mesh> geometry::quad(const glm::vec2& extent, const std::shared_ptr<Texture>& texture) {
-    std::vector<glm::vec3> vertices;
-    vertices.emplace_back(-extent.x, -extent.y, 0.f);
-    vertices.emplace_back(extent.x, -extent.y, 0.f);
-    vertices.emplace_back(-extent.x, extent.y, 0.f);
-    vertices.emplace_back(extent.x, -extent.y, 0.f);
-    vertices.emplace_back(extent.x, extent.y, 0.f);
-    vertices.emplace_back(-extent.x, extent.y, 0.f);
+std::shared_ptr<Mesh> geometry::quad(const glm::vec2& extent, const std::shared_ptr<Texture>& texture) {
+    std::vector<glm::vec3> vertices {
+        {-extent.x, -extent.y, 0.f},
+        {extent.x, -extent.y, 0.f},
+        {-extent.x, extent.y, 0.f},
+        {extent.x, -extent.y, 0.f},
+        {extent.x, extent.y, 0.f},
+        {-extent.x, extent.y, 0.f}
+    };
 
     std::vector<Vertex> quad_vertices {
         //  position                                  normal                         tex coord
@@ -141,18 +142,18 @@ std::unique_ptr<Mesh> geometry::quad(const glm::vec2& extent, const std::shared_
         { vertices.at(5),  { 1.f, 1.f, 1.f },  { 0.0f, 1.f } },
     };
 
-    return std::make_unique<Mesh>(std::move(quad_vertices), texture);
+    return std::make_shared<Mesh>(std::move(quad_vertices), texture);
 }
 
-std::unique_ptr<Mesh> geometry::octahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture) {
-    std::vector<glm::vec3> vertices;
-    vertices.emplace_back(0.f, extent.y, 0.f);
-    vertices.emplace_back(extent.x, 0.f, extent.z);
-    vertices.emplace_back(-extent.x, 0.f, extent.z);
-    vertices.emplace_back(-extent.x, 0.f, -extent.z);
-    vertices.emplace_back(extent.x, 0.f, -extent.z);
-    vertices.emplace_back(0.f, -extent.y, 0.f);
-
+std::shared_ptr<Mesh> geometry::octahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture) {
+    std::vector<glm::vec3> vertices {
+        {0.f, extent.y, 0.f},
+        {extent.x, 0.f, extent.z},
+        {-extent.x, 0.f, extent.z},
+        {-extent.x, 0.f, -extent.z},
+        {extent.x, 0.f, -extent.z},
+        {0.f, -extent.y, 0.f}
+    };
     std::vector<glm::vec3> normals;
     normals.push_back(glm::cross(vertices.at(0) - vertices.at(2), vertices.at(0) - vertices.at(1)));
     normals.push_back(glm::cross(vertices.at(0) - vertices.at(3), vertices.at(0) - vertices.at(2)));
@@ -191,16 +192,16 @@ std::unique_ptr<Mesh> geometry::octahedron(const glm::vec3& extent, const std::s
         { vertices.at(5),   normals.at(7),   { 0.5f, 1.f } },
     };
 
-    return std::make_unique<Mesh>(std::move(octahedron_vertices), texture);
+    return std::make_shared<Mesh>(std::move(octahedron_vertices), texture);
 }
 
-std::unique_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture) {
-    std::vector<glm::vec3> vertices;
-    vertices.emplace_back(0.f, extent.y, 0.f);
-    vertices.emplace_back(0.f, 0.f, extent.z);
-    vertices.emplace_back(-extent.x, 0.f, -extent.z);
-    vertices.emplace_back(extent.x, 0.f, -extent.z);
-
+std::shared_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::shared_ptr<Texture>& texture) {
+    std::vector<glm::vec3> vertices {
+        {0.f, extent.y, 0.f},
+        {0.f, 0.f, extent.z},
+        {-extent.x, 0.f, -extent.z},
+        {extent.x, 0.f, -extent.z}
+    };
     std::vector<glm::vec3> normals;
     normals.push_back(glm::cross(vertices.at(0) - vertices.at(2), vertices.at(0) - vertices.at(1)));
     normals.push_back(glm::cross(vertices.at(0) - vertices.at(3), vertices.at(0) - vertices.at(2)));
@@ -226,15 +227,117 @@ std::unique_ptr<Mesh> geometry::tetrahedron(const glm::vec3& extent, const std::
         { vertices.at(3),   normals.at(3),    { 0.5f, 1.f } },
     };
 
-    return std::make_unique<Mesh>(std::move(tetrahedron_vertices), texture);
+    return std::make_shared<Mesh>(std::move(tetrahedron_vertices), texture);
 }
 
-std::unique_ptr<Mesh> geometry::line(const std::vector<glm::vec3>& points, const std::shared_ptr<Texture>& texture) {
+std::shared_ptr<Mesh> geometry::line(const std::vector<glm::vec3>& points, const std::shared_ptr<Texture>& texture) {
     std::vector<Vertex> line_vertices;
 
     for (auto& p : points) {
         line_vertices.emplace_back(p, glm::vec3{1}, glm::vec2{0});
     }
 
-    return std::make_unique<Mesh>(std::move(line_vertices), texture, GL_LINE_LOOP);
+    return std::make_shared<Mesh>(std::move(line_vertices), texture, GL_LINE_LOOP);
+}
+
+std::shared_ptr<Mesh> geometry::tube(const std::vector<glm::vec3>& points, float radius, int stacks, const std::shared_ptr<Texture>& texture) {
+    std::vector<glm::vec2> circle_points;
+    circle_points.reserve(stacks + 1);
+
+    int i;
+    float a, da = M_PI * 2.0f / stacks;
+    for (a = 0.0, i = 0; i <= stacks; ++i, a += da) {
+        circle_points.emplace_back(
+            radius * cosf(a),
+            radius * sinf(a)
+        );
+    }
+
+    std::vector<Vertex> tube_vertices;
+
+    // https://blackpawn.com/texts/pqtorus/
+    int count = static_cast<int>(points.size());
+    for (i = 0; i < count - 1; i++) {
+        auto& curr = points[i];
+        auto& next = points[i + 1];
+
+        glm::vec3 T{ glm::normalize(next - curr) };
+        glm::vec3 B{ glm::normalize(glm::cross(T, next + curr)) };
+        glm::vec3 N{ glm::normalize(glm::cross(B, T)) };
+
+        for (auto& p : circle_points) {
+            //glm::vec3 tangent{ T };
+            glm::vec3 normal{ glm::normalize(B * p.x + N * p.y) };
+            glm::vec3 vertex{ curr + B * p.x + N * p.y }; // note: not normalized!
+
+            tube_vertices.emplace_back(vertex, normal, glm::vec2{0});
+        }
+    }
+
+    return std::make_shared<Mesh>(std::move(tube_vertices), texture, GL_POINTS);
+}
+
+std::shared_ptr<Mesh> geometry::torus(int sides, int cs_sides, float radius, float cs_radius, const std::shared_ptr<Texture>& texture) {
+    int numVertices = (sides+1) * (cs_sides+1);
+    int numIndices = (2*sides+4) * cs_sides;
+
+    std::vector<Vertex> torus_vertices;
+    torus_vertices.reserve(numVertices);
+    std::vector<uint32_t> torus_indices;
+    torus_indices.reserve(numIndices);
+
+    int angleincs = static_cast<int>(360.0f / sides);
+    int cs_angleincs = static_cast<int>(360.0f / cs_sides);
+
+    float D_TO_R = M_PI / 180;
+
+    // iterate cs_sides: inner ring
+    for (int j = 0; j <= 360; j += cs_angleincs) {
+        float current_radius = radius + (cs_radius * cosf(j * D_TO_R));
+        float zval = cs_radius * sinf(j * D_TO_R);
+
+        // iterate sides: outer ring
+        for (int i = 0; i <= 360; i += angleincs) {
+            glm::vec3 vert {
+                current_radius * cosf(i * D_TO_R),
+                current_radius * sinf(i * D_TO_R),
+                zval
+            };
+
+            float u = i / 360.0f;
+            float v = 2.0f * j / 360.0f - 1;
+            if (v < 0) v = -v;
+
+            float xc = radius * cosf(i * D_TO_R);
+            float yc = radius * sinf(i * D_TO_R);
+
+            glm::vec3 norm{ vert.x - xc, vert.y - yc, vert.z };
+
+            torus_vertices.emplace_back(
+            vert,
+            glm::normalize(norm),
+            glm::vec2{u, v});
+        }
+    }
+
+    // indices grouped by GL_TRIANGLE_STRIP, face oriented clock-wise
+
+    // inner ring
+    for (int i = 0, nextrow = sides + 1; i < cs_sides; i++) {
+        // outer ring
+        int j;
+        for (j = 0; j < sides; j ++) {
+            torus_indices.push_back((i + 1) * nextrow + j);
+            torus_indices.push_back(i * nextrow + j);
+        }
+
+        /* generate dummy triangle to avoid messing next ring */
+        uint32_t dummy  = i * nextrow + j;
+        torus_indices.push_back(dummy + nextrow);
+        torus_indices.push_back(dummy);
+        torus_indices.push_back(dummy + nextrow);
+        torus_indices.push_back(dummy + nextrow);
+    }
+
+    return std::make_shared<Mesh>(std::move(torus_vertices), std::move(torus_indices), texture, GL_TRIANGLE_STRIP);
 }

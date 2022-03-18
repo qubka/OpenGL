@@ -14,6 +14,7 @@
 #include "textmesh.hpp"
 #include "skybox.hpp"
 #include "catmullrom.hpp"
+#include "frustum.hpp"
 
 #include <entt/entity/registry.hpp>
 
@@ -37,21 +38,22 @@ private:
     uint64_t frameNumber{ 0 };
     uint32_t frameCount{ 0 };
     uint32_t framesPerSecond{ 0 };
-    double elapsedTime{ 0.0 };
-    double dt{ 0.0 };
+    float elapsedTime{ 0.0 };
+    float dt{ 0.0 };
 
     entt::registry registry;
+    entt::entity spaceship;
 
     Camera camera;
+	Frustum frustum;
+	CatmullRom catmullRom;
+
 	AudioManager audioManager;
-    DirectionalLight directionalLight;
-	std::vector<SpotLight> spotLights;
-	std::vector<PointLight> pointLights;
+	DirectionalLight directionalLight;
     std::unique_ptr<Skybox> skybox;
     std::unique_ptr<TextMesh> textMesh;
 	std::unique_ptr<Font> font;
 	std::unique_ptr<Font> icons;
-    std::unique_ptr<CatmullRom> catmullRom;
 
     std::unique_ptr<Shader> mainShader;
     std::unique_ptr<Shader> skyboxShader;
@@ -59,8 +61,10 @@ private:
     std::unique_ptr<Shader> splineShader;
 
     bool darkMode{ true };
+	int viewMode{ 0 };
 
 	void displayFrameRate();
+	void moveShip();
 
     friend int ::main(int argc, char** argv);
 

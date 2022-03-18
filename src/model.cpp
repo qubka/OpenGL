@@ -17,8 +17,8 @@ void Model::Create(const std::string& path, const std::unique_ptr<Mesh>& mesh, c
     exporter.Export(&scene, format, path);
 }
 
-std::unique_ptr<Model> Model::Load(const std::filesystem::path& path) {
-    auto model = std::make_unique<Model>();
+std::shared_ptr<Model> Model::Load(const std::filesystem::path& path) {
+    auto model = std::make_shared<Model>();
 
     Assimp::Importer import;
     const aiScene* scene = import.ReadFile(path.string(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);

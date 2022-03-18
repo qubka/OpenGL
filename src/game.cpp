@@ -3,6 +3,9 @@
 #include "components.hpp"
 #include "geometry.hpp"
 #include "texture.hpp"
+#include "poissonsampling.hpp"
+#include "random.hpp"
+#include "extentions.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -30,6 +33,7 @@ void Game::init() {
     glCall(glDepthFunc, GL_LEQUAL);
     glCall(glShadeModel, GL_SMOOTH);
     glCall(glPixelStorei, GL_UNPACK_ALIGNMENT, 4);
+    glCall(glPointSize, 7.0f);
 
     // Initialise audio and play background music
     audioManager.load("resources/audio/Boing.wav");                    // Royalty free sound from freesound.org
@@ -39,127 +43,109 @@ void Game::init() {
     mainShader = std::make_unique<Shader>();
     mainShader->link("resources/shaders/mainShader.vert", "resources/shaders/mainShader.frag");
 
-    // Initialise lights and fog
-    directionalLight.color = glm::vec3{1.0f, 1.0f, 1.0f};
+    // Initialise lights
+    directionalLight.color = glm::vec3{ 1.0f, 1.0f, 1.0f };
     directionalLight.ambientIntensity = darkMode ? 0.15f : 1.0f;
     directionalLight.diffuseIntensity = darkMode ? 0.1f : 1.0f;
-    directionalLight.direction = glm::normalize(glm::vec3{0.0f, -1.0f, 0.0f});
-
-    PointLight pointLight;
-    pointLight.position = glm::vec3{20.0f, 10.0f, 150.0f};
-    pointLight.color = glm::vec3{1.0f, 0.0f, 1.0f};
-    pointLight.ambientIntensity = 0.25f;
-    pointLight.diffuseIntensity = 0.6f;
-    pointLights.push_back(pointLight);
-
-    pointLight.position = glm::vec3{70.0f, 10.0f, 100.0f};
-    pointLight.color = glm::vec3{0.0f, 1.0f, 1.0f};
-    pointLight.ambientIntensity = 0.25f;
-    pointLight.diffuseIntensity = 0.6f;
-    pointLights.push_back(pointLight);
-
-    SpotLight spotLight;
-    spotLight.position = glm::vec3{40.0f, 10.0f, 50.0f};
-    spotLight.color = glm::vec3{0.0f, 0.0f, 1.0f};
-    spotLight.ambientIntensity = 0.9f;
-    spotLight.diffuseIntensity = 0.9f;
-    spotLight.direction = glm::vec3{0, -1, 0};
-    spotLight.cutoff = 0.9f;
-    spotLights.push_back(spotLight);
+    directionalLight.direction = glm::normalize(glm::vec3{ 0.0f, -1.0f, 0.0f });
 
     mainShader->use();
     mainShader->setUniform("fog_on", true);
-    mainShader->setUniform("fog_colour", glm::vec3{0.5});
+    mainShader->setUniform("fog_colour", glm::vec3{ 0.5 });
     mainShader->setUniform("fog_factor_type", 0);
     mainShader->setUniform("fog_start", 20.f);
-    mainShader->setUniform("fog_end", 500.f);
+    mainShader->setUniform("fog_end", 1000.f);
 
     mainShader->setUniform("lighting_on", true);
     mainShader->setUniform("transparency", 1.0f);
     mainShader->setUniform("gMatSpecularIntensity", 1.f);
     mainShader->setUniform("gSpecularPower", 10.f);
-    mainShader->setUniform("gNumPointLights", static_cast<int>(pointLights.size()));
-    mainShader->setUniform("gNumSpotLights", static_cast<int>(spotLights.size()));
+
     directionalLight.submit(mainShader);
+
+    // Generate path for pipe
+
+    std::vector<glm::vec3> points{
+        { 100,  5,  0 },
+        { 71,   5,  71 },
+        { 0,    5,  100 },
+        { -71,  20, 71 },
+        { -100, 5,  0 },
+        { -71,  5,  -71 },
+        { 0,    40, -100 },
+        { 71,   50, -71 }
+    };
+
+    catmullRom.uniformlySampleControlPoints(std::move(points), 500);
+
+    auto tube = registry.create();
+    registry.emplace<TransformComponent>(tube);
+    registry.emplace<MeshComponent>(tube, geometry::tube(catmullRom.getControlPoints(), 30.0f, 48, std::make_unique<Texture>(150, 0, 150)), FLT_MAX);
+
+    auto t = geometry::torus(24, 72, 35.0f, 7.5f, std::make_shared<Texture>("resources/textures/magic.png", true, false));
+    auto& p = catmullRom.getCentrelinePoints();
+    auto& n = catmullRom.getCentrelineNormals();
+    for (int i = 0; i < p.size(); i += 30) {
+        auto entity = registry.create();
+        registry.emplace<TransformComponent>(entity, p[i], glm::quatLookAt(n[i], vec3::up), glm::vec3{1.0f});
+        registry.emplace<MeshComponent>(entity, t, 35.0f);
+    }
+
+    // Load meshes
+
+    std::vector<std::shared_ptr<Model>> asteroidsModels {
+        Model::Load("resources/models/Asteroids/Asteroid_1.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_2.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_3.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_4.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_5.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_6.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_7.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_8.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_9.fbx"),
+        Model::Load("resources/models/Asteroids/Asteroid_10.fbx")
+    };
 
     // Create entities
 
-    auto entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{0.0f}, glm::vec3{0.0f, glm::radians(180.0f), 0.0f}, glm::vec3{2.5f});
-    registry.emplace<ModelComponent>(entity, Model::Load("resources/models/Horse/horse2.obj"));
+    glm::vec3& initial = catmullRom.getCentrelinePoints()[0];
+    glm::vec3& direction = catmullRom.getCentrelineNormals()[0];
 
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{100.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{5.0f});
-    registry.emplace<ModelComponent>(entity, Model::Load("resources/models/Barrel/barrel02.obj"));
+    spaceship = registry.create();
+    registry.emplace<TransformComponent>(spaceship, initial);
+    registry.emplace<ModelComponent>(spaceship, Model::Load("resources/models/Ship/SpaceShip_final.fbx"));
+    registry.emplace<ShipComponent>(spaceship);
+    auto& spotLight = registry.emplace<SpotLight>(spaceship);
+    spotLight.position = initial + direction * 5.0f;
+    spotLight.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
+    spotLight.ambientIntensity = 0.9f;
+    spotLight.diffuseIntensity = 0.9f;
+    spotLight.direction = direction;
+    spotLight.cutoff = 0.9f;
+    auto& pointLight = registry.emplace<PointLight>(spaceship);
+    pointLight.position = initial - direction * 10.0f;
+    pointLight.color = glm::vec3{ 0.17f, 1.0f, 0.025f };
+    pointLight.ambientIntensity = 0.25f;
+    pointLight.diffuseIntensity = 0.6f;
 
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{250.0f, 0.0f, 100.0f}, glm::vec3{glm::radians(-90.0f), 0.0f, 0.0f}, glm::vec3{0.01f});
-    registry.emplace<ModelComponent>(entity, Model::Load("resources/models/Building/AIT01W2W7.FBX"));
+    for (const auto& v : poisson::diskSampler2D(50, {1000, 1000}, 50)) {
+        auto entity = registry.create();
+        registry.emplace<TransformComponent>(entity, glm::vec3{v.x - 500.0f, Random::FloatRange(-300.0f, 300.0f), v.y - 500.0f}, glm::quat{{ Random::FloatValue(), Random::FloatValue(), Random::FloatValue() }}, glm::vec3{2.5f});
+        registry.emplace<ModelComponent>(entity, asteroidsModels[Random::IntRange(0, static_cast<int>(asteroidsModels.size()) - 1)], 5.0f);
+    }
 
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{100.0f, 0.0f, 100.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{5.0f});
-    registry.emplace<ModelComponent>(entity, Model::Load("resources/models/Car/car.obj"));
-
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{100.0f, 0.0f, 50.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.225f});
-    registry.emplace<ModelComponent>(entity, Model::Load("resources/models/Tree/tree2.fbx"));
-
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{10.0f, 5.0f, 150.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{5.0f});
-    registry.emplace<ModelComponent>(entity, Model::Load("resources/models/Cube/cube.fbx"));
-
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{20.0f, 10.0f, 150.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{4.0f});
-    registry.emplace<MeshComponent>(entity, geometry::cuboid(glm::vec3{1}, false, std::make_shared<Texture>("resources/textures/Tile41a.jpg", true, false)));
-
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{50.0f, 0.0f, 50.0f}, glm::vec3{glm::radians(-90.0f), 0.0f, 0.0f}, glm::vec3{1.0f});
-    registry.emplace<MeshComponent>(entity, geometry::quad(glm::vec2{500.0f}, std::make_shared<Texture>("resources/textures/terrain.jpg", true, false, glm::vec2{10.0f})));
-
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{30.0f, 10.0f, 150.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{4.0f});
-    registry.emplace<MeshComponent>(entity, geometry::sphere(10, 20, 0.5f, std::make_shared<Texture>(255, 0, 0)));
-
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{40.0f, 10.0f, 150.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{4.0f});
-    registry.emplace<MeshComponent>(entity, geometry::octahedron(glm::vec3{1.0f, 2.0f, 1.0f}, std::make_shared<Texture>("resources/textures/Stone.png", true, false)));
-
-    auto mesh = geometry::tetrahedron(glm::vec3{1.5f, 1.0f, 1.5f}, std::make_shared<Texture>(255, 255, 0));
-
-    // Write to file
-    Model::Create("output/tetrahedron.obj", mesh, "obj");
-
-    entity = registry.create();
-    registry.emplace<TransformComponent>(entity, glm::vec3{50.0f, 10.0f, 150.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{4.0f});
-    registry.emplace<MeshComponent>(entity, std::move(mesh));
-
-    // generate path for pipe
-
-    std::vector<glm::vec3> points;
-    points.emplace_back(100, 5, 0);
-    points.emplace_back(71, 5, 71);
-    points.emplace_back(0, 5, 100);
-    points.emplace_back(-71, 20, 71);
-    points.emplace_back(-100, 5, 0);
-    points.emplace_back(-71, 5, -71);
-    points.emplace_back(0, 40, -100);
-    points.emplace_back(71, 50, -71);
-
-    catmullRom = std::make_unique<CatmullRom>(std::move(points), 500);
-
-    //pipe.set(catmullRom->centrelinePoints, geometry::circle({0.5f, 0.5f}, 48));
-    //pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
     //////////////////////////////////////////////////////////////
 
     // Create cubemap skybox
     std::array<std::string, 6> faces {
-        "resources/skyboxes/desertlf.jpg",
-        "resources/skyboxes/desertrt.jpg",
-        "resources/skyboxes/desertup.jpg",
-        "resources/skyboxes/desertdn.jpg",
-        "resources/skyboxes/desertft.jpg",
-        "resources/skyboxes/desertbk.jpg",
+        "resources/skyboxes/GalaxyTex_PositiveX.png",
+        "resources/skyboxes/GalaxyTex_NegativeX.png",
+        "resources/skyboxes/GalaxyTex_NegativeY.png",
+        "resources/skyboxes/GalaxyTex_PositiveY.png",
+        "resources/skyboxes/GalaxyTex_PositiveZ.png",
+        "resources/skyboxes/GalaxyTex_NegativeZ.png",
     };
+
     skybox = std::make_unique<Skybox>(faces);
 
     skyboxShader = std::make_unique<Shader>();
@@ -213,34 +199,54 @@ void Game::render() {
     directionalLight.submit(mainShader);
 
     // Render scene
+    frustum.update(viewProjMatrix);
 
-    auto models = registry.view<const TransformComponent, const ModelComponent>();
-    for(auto [entity, transform, model]: models.each()) {
-        glm::mat4 transformMatrix{ transform };
-        glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
+    auto group = registry.group<TransformComponent>(entt::get<ModelComponent>);
+    for (auto entity : group) {
+        auto [transform, model] = group.get<TransformComponent, ModelComponent>(entity);
 
-        mainShader->setUniform("u_transform", transformMatrix);
-        mainShader->setUniform("u_normal", normalMatrix);
-        model()->render(mainShader);
+        if (frustum.checkSphere(transform.translation, model.radius)) {
+            glm::mat4 transformMatrix{ transform };
+            glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
+
+            mainShader->setUniform("u_transform", transformMatrix);
+            mainShader->setUniform("u_normal", normalMatrix);
+            model()->render(mainShader);
+        }
     }
 
     auto meshes = registry.view<const TransformComponent, const MeshComponent>();
-    for(auto [entity, transform, mesh]: meshes.each()) {
-        glm::mat4 transformMatrix{ transform };
-        glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{transformMatrix})) };
+    for (auto [entity, transform, mesh] : meshes.each()) {
+        if (frustum.checkSphere(transform.translation, mesh.radius)) {
+            glm::mat4 transformMatrix{ transform };
+            glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
 
-        mainShader->setUniform("u_transform", transformMatrix);
-        mainShader->setUniform("u_normal", normalMatrix);
-        mesh()->render(mainShader);
+            mainShader->setUniform("u_transform", transformMatrix);
+            mainShader->setUniform("u_normal", normalMatrix);
+            mesh()->render(mainShader);
+        }
     }
 
     mainShader->setUniform("lighting_on", false);
-    for (size_t i = 0; i < pointLights.size(); i++) {
-        pointLights[i].submit(mainShader, i);
+
+    uint32_t i = 0;
+    auto spotLights = registry.view<const SpotLight>();
+    mainShader->setUniform("gNumSpotLights", static_cast<int>(spotLights.size()));
+
+    for (auto [entity, light] : spotLights.each()) {
+        light.submit(mainShader, i);
+        i++;
     }
-    for (size_t i = 0; i < spotLights.size(); i++) {
-        spotLights[i].submit(mainShader, i);
+
+    i = 0;
+    auto pointLights = registry.view<const PointLight>();
+    mainShader->setUniform("gNumPointLights", static_cast<int>(pointLights.size()));
+
+    for (auto [entity, light] : pointLights.each()) {
+        light.submit(mainShader, i);
+        i++;
     }
+
     mainShader->setUniform("lighting_on", true);
 
     //////////////////////////////////////////////////////////////
@@ -253,10 +259,10 @@ void Game::render() {
 
     //////////////////////////////////////////////////////////////
 
-    splineShader->use();
+    /*splineShader->use();
     splineShader->setUniform("u_view_projection", viewProjMatrix);
 
-    catmullRom->render(splineShader);
+    tubeMesh->render();*/
 
     //////////////////////////////////////////////////////////////
 
@@ -276,12 +282,11 @@ void Game::render() {
     textMesh->render(font, "Press ESC to exit", 20, 50, 1);
     textMesh->render(font, "Press F1 to enable wiremode renderer", 20, 80, 1);
     textMesh->render(font, "Press F2 to toggle lighting", 20, 110, 1);
+    textMesh->render(font, "Press F3 to switch view mode", 20, 140, 1);
     textMesh->render(font, glm::to_string(camera.getPosition()), window.getWidth() / 2, window.getHeight() - 30, 1);
 
 	// Draw the 2D graphics after the 3D graphics
 	displayFrameRate();
-
-    font->unbind();
 
     // Draw icons
 
@@ -298,8 +303,6 @@ void Game::render() {
     textShader->setUniform("color", glm::vec4{0, 0, 1, 1});
 
     textMesh->render(icons, "ABCDEFGHIJKLMN\nOPQRSTUVWXYZ", 20, window.getHeight() / 2 - 60, 1);
-
-    icons->unbind();
 }
 
 // Update method runs repeatedly with the Render method
@@ -320,10 +323,10 @@ void Game::update() {
     if (Input::GetKeyDown(GLFW_KEY_F2))
         darkMode = !darkMode;
 
-    /*if (Input::GetKeyDown(GLFW_KEY_E)) {
-        pipe.addPathPoint(camera.getPosition());
-        pipeMesh = geometry::pipe(pipe, std::make_shared<Texture>(255, 255, 0));
-    }*/
+    if (Input::GetKeyDown(GLFW_KEY_F3))
+        viewMode = (viewMode + 1) % 3;
+
+    moveShip();
 
     camera.update(dt);
 }
@@ -349,13 +352,63 @@ void Game::displayFrameRate() {
     }
 }
 
+void Game::moveShip() {
+    auto& transform = registry.get<TransformComponent>(spaceship);
+    auto& ship = registry.get<ShipComponent>(spaceship);
+    auto& spotLight= registry.get<SpotLight>(spaceship);
+    auto& pointLight = registry.get<PointLight>(spaceship);
+
+    auto& points = catmullRom.getControlPoints();
+    auto& normals = catmullRom.getCentrelineNormals();
+
+    auto& current = transform.translation;
+    auto& target = points[ship.path];
+    auto& direction = normals[ship.path];
+
+    if (glm::distance(current, target) < 0.1f) {
+        ship.path += 1;
+        if (ship.path >= points.size()) {
+            ship.path = 0;
+        }
+    }
+
+    transform.translation = glm::smoothDamp(transform.translation, target, ship.velocity, 0.01f, ship.maxSpeed, dt);
+    transform.rotation = glm::quatLookAt(direction, vec3::up);
+
+    spotLight.position = transform.translation + direction * 5.0f;
+    spotLight.direction = direction;
+    pointLight.position = transform.translation - direction * 10.0f;
+
+    if (!window.Locked()) {
+        switch (viewMode) {
+            case 0: {
+                camera.setPosition(transform.translation - direction * 30.0f);
+                camera.setRotation(transform.rotation);
+                break;
+            }
+            case 1: {
+                auto sideDirection = glm::rotate(direction, glm::radians(90.0f), vec3::right);
+                camera.setPosition(transform.translation - sideDirection * 30.0f);
+                camera.setRotation(glm::quatLookAt(sideDirection, vec3::up));
+                break;
+            }
+            case 2: {
+                auto topDirection = glm::rotate(direction, glm::radians(90.0f), vec3::up);
+                camera.setPosition(transform.translation - topDirection * 30.0f);
+                camera.setRotation(glm::quatLookAt(topDirection, vec3::up));
+                break;
+            }
+        }
+    }
+}
+
 // The game loop runs repeatedly until game over
 void Game::run() {
-    double currentTime = glfwGetTime();
-    double previousTime = currentTime;
+    float currentTime = static_cast<float>(glfwGetTime());
+    float previousTime = currentTime;
 
     while (!window.shouldClose()) {
-        currentTime = glfwGetTime();
+        currentTime = static_cast<float>(glfwGetTime());
         dt = currentTime - previousTime;
         previousTime = currentTime;
 

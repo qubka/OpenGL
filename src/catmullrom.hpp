@@ -1,26 +1,23 @@
 #pragma once
 
-class Shader;
-
 class CatmullRom {
 public:
-    CatmullRom(std::vector<glm::vec3>&& points,  int numSamples);
+    CatmullRom();
     ~CatmullRom();
 
-    void render(const std::unique_ptr<Shader>& shader) const;
+    std::vector<glm::vec3>& getControlPoints() { return controlPoints; }
+    std::vector<glm::vec3>& getCentrelinePoints() { return centrelinePoints; }
+    std::vector<glm::vec3>& getCentrelineNormals() { return centrelineNormals; }
 
-public:
-    GLuint vao, vbo;
+    void uniformlySampleControlPoints(std::vector<glm::vec3>&& points, int numSamples);
 
-    void uniformlySampleControlPoints(int numSamples);
-    void generateTubeSurface(float radius, int steps);
+private:
     void computeLengthsAlongControlPoints();
-    bool sample(float d, glm::vec3& p);
+    void uniformSample(int numSamples);
+    bool sample(float d, glm::vec3& p, glm::vec3& n) const;
 
-    static glm::vec3 interpolate(const glm::vec3& start, const glm::vec3& end, const glm::vec3& tanPoint1, const glm::vec3& tanPoint2, float t);
-
-    std::vector<glm::vec3> vertices;
     std::vector<float> distances;
     std::vector<glm::vec3> controlPoints;
     std::vector<glm::vec3> centrelinePoints;
+    std::vector<glm::vec3> centrelineNormals;
 };

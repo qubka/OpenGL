@@ -6,13 +6,13 @@ class Camera {
 public:
 	Camera(); // Constructor - sets default values for camera position, viewvector, upvector, and speed
 
-    const glm::vec3& getPosition() { return position; }					    // Gets the position of the camera centre of projection
-    void setPosition(const glm::vec3& pos) { position = pos; }
-    const glm::quat& getRotation() { return rotation; }					    // Gets the rotation of the camera
-    void setRotation(const glm::quat& rot) { rotation = rot; }
-    glm::vec3 getUpVector() const { return rotation * vec3::up; }			// Gets the camera up vector
-    glm::vec3 getForwardVector() const { return rotation * vec3::back; }	// Gets the camera forward vector
-    glm::vec3 getRightVector() const { return rotation * vec3::right; }		// Gets the camera right vector
+    const glm::vec3& getPosition() { return position; }					 // Gets the position of the camera centre of projection
+    void setPosition(const glm::vec3& pos) { position = pos; }           // Sets the position of the camera centre of projection
+    const glm::quat& getRotation() { return rotation; }					 // Gets the rotation of the camera
+    void setRotation(const glm::quat& rot) { rotation = rot; }           // Sets the rotation of the camera
+    glm::vec3 getUpVector() const { return rotation * vec3::up; }		 // Gets the camera up vector
+    glm::vec3 getForwardVector() const { return rotation * vec3::back; } // Gets the camera forward vector
+    glm::vec3 getRightVector() const { return rotation * vec3::right; }	 // Gets the camera right vector
     const glm::mat4& getPerspectiveProjectionMatrix() const { return perspectiveProjectionMatrix; }	  // Gets the camera perspective projection matrix
     const glm::mat4& getOrthographicProjectionMatrix() const { return orthographicProjectionMatrix; } // Gets the camera orthographic projection matrix
 
@@ -32,13 +32,6 @@ public:
 	void setPerspectiveProjectionMatrix(float fov, float aspectRatio, float nearClippingPlane, float farClippingPlane);
 	void setOrthographicProjectionMatrix(int width, int height);
 
-    enum class ViewMode {
-        FirstPerson,
-        ThirdPerson,
-        SideView,
-        TopView
-    };
-
 private:
 	glm::vec3 position{ 0.0f };
 	glm::quat rotation{ 1, 0, 0, 0 };
@@ -49,6 +42,4 @@ private:
 
 	glm::mat4 perspectiveProjectionMatrix{ 1.0f };
 	glm::mat4 orthographicProjectionMatrix{ 1.0f };
-
-    ViewMode mode{ ViewMode::FirstPerson };
 };

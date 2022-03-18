@@ -31,7 +31,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         glad
         stb
         entt
-        #magic_enum
+        magic_enum
 
         # dynamic link
         ${OPENAL_LIBRARY}
