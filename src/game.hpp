@@ -61,7 +61,7 @@ private:
     std::unique_ptr<Shader> splineShader;
 
     bool darkMode{ true };
-	int viewMode{ 0 };
+    int viewMode{ 0 };
 
 	void displayFrameRate();
 	void moveShip();

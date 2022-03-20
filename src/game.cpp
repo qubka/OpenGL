@@ -36,8 +36,7 @@ void Game::init() {
     glCall(glPointSize, 7.0f);
 
     // Initialise audio and play background music
-    audioManager.load("resources/audio/Boing.wav");                    // Royalty free sound from freesound.org
-    audioManager.load("resources/audio/fsm-team-escp-paradox.wav");    // Royalty free sound from freesound.org
+    audioManager.load("resources/audio/fsm-team-escp-paradox.wav");
     //audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
 
     mainShader = std::make_unique<Shader>();
@@ -65,22 +64,22 @@ void Game::init() {
 
     // Generate path for pipe
 
-    std::vector<glm::vec3> points{
-        { 100,  5,  0 },
-        { 71,   5,  71 },
-        { 0,    5,  100 },
-        { -71,  20, 71 },
-        { -100, 5,  0 },
-        { -71,  5,  -71 },
-        { 0,    40, -100 },
-        { 71,   50, -71 }
+    std::vector<glm::vec3> points {
+        { 400,  -50,  0 },
+        { 250,   50,  250 },
+        { 0,    100,  400 },
+        { -250,  50, 250 },
+        { -400, 5,  0 },
+        { -250,  -20,  -250 },
+        { 0,    -100, -400 },
+        { 250,   -150, -250 }
     };
 
     catmullRom.uniformlySampleControlPoints(std::move(points), 500);
 
     auto tube = registry.create();
     registry.emplace<TransformComponent>(tube);
-    registry.emplace<MeshComponent>(tube, geometry::tube(catmullRom.getControlPoints(), 30.0f, 48, std::make_unique<Texture>(150, 0, 150)), FLT_MAX);
+    registry.emplace<MeshComponent>(tube, geometry::tube(catmullRom.getControlPoints(), 30.0f, 48, std::make_unique<Texture>(150, 0, 150)), FLT_MAX / 2.0f);
 
     auto t = geometry::torus(24, 72, 35.0f, 7.5f, std::make_shared<Texture>("resources/textures/magic.png", true, false));
     auto& p = catmullRom.getCentrelinePoints();
@@ -90,6 +89,10 @@ void Game::init() {
         registry.emplace<TransformComponent>(entity, p[i], glm::quatLookAt(n[i], vec3::up), glm::vec3{1.0f});
         registry.emplace<MeshComponent>(entity, t, 35.0f);
     }
+
+    auto tetrahedron = registry.create();
+    registry.emplace<TransformComponent>(tetrahedron);
+    registry.emplace<MeshComponent>(tetrahedron, geometry::tetrahedron(glm::vec3{1.0f, 3.0f, 1.0f}, std::make_unique<Texture>(255, 0, 255)));
 
     // Load meshes
 
@@ -118,8 +121,8 @@ void Game::init() {
     auto& spotLight = registry.emplace<SpotLight>(spaceship);
     spotLight.position = initial + direction * 5.0f;
     spotLight.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-    spotLight.ambientIntensity = 0.9f;
-    spotLight.diffuseIntensity = 0.9f;
+    spotLight.ambientIntensity = 90.0f;
+    spotLight.diffuseIntensity = 90.0f;
     spotLight.direction = direction;
     spotLight.cutoff = 0.9f;
     auto& pointLight = registry.emplace<PointLight>(spaceship);
@@ -284,6 +287,7 @@ void Game::render() {
     textMesh->render(font, "Press F2 to toggle lighting", 20, 110, 1);
     textMesh->render(font, "Press F3 to switch view mode", 20, 140, 1);
     textMesh->render(font, glm::to_string(camera.getPosition()), window.getWidth() / 2, window.getHeight() - 30, 1);
+    textMesh->render(font, "Time: " + std::to_string(glfwGetTime()), window.getWidth() / 2 + 150.0f, 20, 1);
 
 	// Draw the 2D graphics after the 3D graphics
 	displayFrameRate();
@@ -309,7 +313,7 @@ void Game::render() {
 void Game::update() {
     // Set the orthographic and perspective projection matrices based on the image size
     camera.setOrthographicProjectionMatrix(window.getWidth(), window.getHeight());
-    camera.setPerspectiveProjectionMatrix(45.0f, window.getAspect(), 0.01f, 1000.0f);
+    camera.setPerspectiveProjectionMatrix(45.0f, window.getAspect(), 0.01f, 5000.0f);
 
     if (Input::GetKeyDown(GLFW_KEY_ESCAPE))
         window.shouldClose(true);
@@ -324,11 +328,13 @@ void Game::update() {
         darkMode = !darkMode;
 
     if (Input::GetKeyDown(GLFW_KEY_F3))
-        viewMode = (viewMode + 1) % 3;
+        viewMode = viewMode + 1 % 4;
 
     moveShip();
 
-    camera.update(dt);
+    if (window.Locked()) {
+        camera.update(dt);
+    }
 }
 
 void Game::displayFrameRate() {
@@ -396,6 +402,11 @@ void Game::moveShip() {
                 auto topDirection = glm::rotate(direction, glm::radians(90.0f), vec3::up);
                 camera.setPosition(transform.translation - topDirection * 30.0f);
                 camera.setRotation(glm::quatLookAt(topDirection, vec3::up));
+                break;
+            }
+            case 3: {
+                camera.setPosition(transform.translation + direction * 5.0f);
+                camera.setRotation(transform.rotation);
                 break;
             }
         }

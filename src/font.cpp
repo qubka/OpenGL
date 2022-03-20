@@ -63,10 +63,8 @@ Font::Font(const FontFace& face, int size) {
     glCall(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glCall(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    /*std::filesystem::path path {"resources/fonts/atlas"};
-    path += std::to_string(size);
-    path += ".png";
-    stbi_write_png(path.c_str(), width, height, 1, pixels.data(), width * 1);*/
+    std::string path {"resources/fonts/" + face.getName() + ".png"};
+    stbi_write_png(path.c_str(), width, height, 1, pixels.data(), width * 1);
 
     std::cout << "Generated a " << width << "x " << height << " (" << width * height / 1024 << " kb) texture atlas." << std::endl;
 }

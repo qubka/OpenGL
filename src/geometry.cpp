@@ -267,7 +267,7 @@ std::shared_ptr<Mesh> geometry::tube(const std::vector<glm::vec3>& points, float
 
         for (auto& p : circle_points) {
             //glm::vec3 tangent{ T };
-            glm::vec3 normal{ glm::normalize(B * p.x + N * p.y) };
+            glm::vec3 normal{ -glm::normalize(B * p.x + N * p.y) };
             glm::vec3 vertex{ curr + B * p.x + N * p.y }; // note: not normalized!
 
             tube_vertices.emplace_back(vertex, normal, glm::vec2{0});
