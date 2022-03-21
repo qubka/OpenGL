@@ -37,7 +37,7 @@ void Game::init() {
 
     // Initialise audio and play background music
     audioManager.load("resources/audio/fsm-team-escp-paradox.wav");
-    //audioManager.play("resources/audio/fsm-team-escp-paradox.wav", camera.getPosition());
+    audioManager.play("resources/audio/fsm-team-escp-paradox.wav");
 
     mainShader = std::make_unique<Shader>();
     mainShader->link("resources/shaders/mainShader.vert", "resources/shaders/mainShader.frag");
@@ -162,12 +162,6 @@ void Game::init() {
     //////////////////////////////////////////////////////////////
 
     // Create texture atlasses for several font sizes
-    FT_Library ft;
-    if (FT_Init_FreeType(&ft)) {
-        std::cerr << "ERROR: Failed to init FreeType" << std::endl;
-        return;
-    }
-
     FontLibrary library;
     FontFace roboto_face{library, "resources/fonts/Roboto-Black.ttf"};
     FontFace icon_face{ library, "resources/fonts/Font90Icons-2ePo.ttf"};
@@ -183,7 +177,7 @@ void Game::init() {
 // Render method runs repeatedly in a loop
 void Game::render() {
     // Clear the buffers and enable depth testing (z-buffering)
-    glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glCall(glDisable, GL_BLEND);
     glCall(glEnable, GL_DEPTH_TEST);
 
@@ -208,7 +202,7 @@ void Game::render() {
     for (auto entity : group) {
         auto [transform, model] = group.get<TransformComponent, ModelComponent>(entity);
 
-        if (frustum.checkSphere(transform.translation, model.radius)) {
+        if (frustum.checkSphere(transform.translation, model.radius * glm::max(transform.scale.x, transform.scale.y, transform.scale.z)))) {
             glm::mat4 transformMatrix{ transform };
             glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
 
@@ -220,7 +214,7 @@ void Game::render() {
 
     auto meshes = registry.view<const TransformComponent, const MeshComponent>();
     for (auto [entity, transform, mesh] : meshes.each()) {
-        if (frustum.checkSphere(transform.translation, mesh.radius)) {
+        if (frustum.checkSphere(transform.translation, mesh.radius * glm::max(transform.scale.x, transform.scale.y, transform.scale.z)))) {
             glm::mat4 transformMatrix{ transform };
             glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
 
