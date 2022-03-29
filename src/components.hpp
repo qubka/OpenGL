@@ -33,7 +33,8 @@ struct MeshComponent {
 
 struct ShipComponent {
     glm::vec3 velocity{0.0f};
-    float speed{1.0f};
+    glm::vec2 shift{0.0f};
+    float speed{5.0f};
     float maxSpeed{0.01f};
     int path{0};
 };

@@ -35,16 +35,16 @@ void Camera::setViewByMouse() {
 
 // Update the camera to respond to key presses for translation
 void Camera::translateByKeyboard(float dt) {
-    if (Input::GetKey(GLFW_KEY_W) || Input::GetKey(GLFW_KEY_UP))
+    if (Input::GetKey(GLFW_KEY_W))
         position += getForwardVector() * speed * dt;
 
-    if (Input::GetKey(GLFW_KEY_S) || Input::GetKey(GLFW_KEY_DOWN))
+    if (Input::GetKey(GLFW_KEY_S))
         position -= getForwardVector() * speed * dt;
 
-    if (Input::GetKey(GLFW_KEY_D) || Input::GetKey(GLFW_KEY_RIGHT))
+    if (Input::GetKey(GLFW_KEY_D))
         position += getRightVector() * speed * dt;
 
-    if (Input::GetKey(GLFW_KEY_A) || Input::GetKey(GLFW_KEY_LEFT))
+    if (Input::GetKey(GLFW_KEY_A))
         position -= getRightVector() * speed * dt;
 }
 

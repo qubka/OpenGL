@@ -156,8 +156,8 @@ void Game::init() {
 
     // Create texture atlasses for several font sizes
     FontLibrary library;
-    FontFace roboto_face{library, "resources/fonts/Roboto-Black.ttf"};
-    FontFace icon_face{ library, "resources/fonts/Font90Icons-2ePo.ttf"};
+    FontFace roboto_face{ library, "resources/fonts/Roboto-Black.ttf" };
+    FontFace icon_face{ library, "resources/fonts/Font90Icons-2ePo.ttf" };
 
     textShader = std::make_unique<Shader>();
     textShader->link("resources/shaders/textShader.vert", "resources/shaders/textShader.frag");
@@ -191,7 +191,7 @@ void Game::render() {
     // Render scene
     frustum.update(viewProjMatrix);
 
-    auto group = registry.group<TransformComponent>(entt::get<ModelComponent>);
+    auto group = registry.group<TransformComponent>(entt::get<ModelComponent>, entt::exclude<ShipComponent>);
     for (auto entity : group) {
         auto [transform, model] = group.get<TransformComponent, ModelComponent>(entity);
 
@@ -215,6 +215,21 @@ void Game::render() {
             mainShader->setUniform("u_normal", normalMatrix);
             mesh()->render(mainShader);
         }
+    }
+
+    auto& m = registry.get<ModelComponent>(spaceship);
+    auto& t = registry.get<TransformComponent>(spaceship);
+    auto& s = registry.get<ShipComponent>(spaceship);
+
+    if (frustum.checkSphere(t.translation, m.radius * glm::max(t.scale.x, t.scale.y, t.scale.z))) {
+        glm::mat4 transformMatrix{ t };
+        transformMatrix = glm::translate(transformMatrix, {s.shift, 0});
+
+        glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
+
+        mainShader->setUniform("u_transform", transformMatrix);
+        mainShader->setUniform("u_normal", normalMatrix);
+        m()->render(mainShader);
     }
 
     mainShader->setUniform("lighting_on", false);
@@ -365,8 +380,19 @@ void Game::moveShip() {
         }
     }
 
-    transform.translation = glm::smoothDamp(transform.translation, target, ship.velocity, 0.01f, ship.maxSpeed, dt);
+    if (Input::GetKey(GLFW_KEY_UP))
+        ship.shift += vec2::up * ship.speed * dt;
+    if (Input::GetKey(GLFW_KEY_DOWN))
+        ship.shift -= vec2::up * ship.speed * dt;
+    if (Input::GetKey(GLFW_KEY_RIGHT))
+        ship.shift += vec2::right * ship.speed * dt;
+    if (Input::GetKey(GLFW_KEY_LEFT))
+        ship.shift -= vec2::right * ship.speed * dt;
+
+    transform.translation = glm::smoothDamp(current, target, ship.velocity, 0.01f, ship.maxSpeed, dt);
     transform.rotation = glm::quatLookAt(direction, vec3::up);
+
+    // Modify children
 
     spotLight.position = transform.translation + direction * 5.0f;
     spotLight.direction = direction;
