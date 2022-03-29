@@ -4,7 +4,7 @@
 
 class Camera {
 public:
-	Camera(); // Constructor - sets default values for camera position, viewvector, upvector, and speed
+	Camera(const glm::vec3& position, const glm::quat& rotation, float speed); // Constructor - sets default values for camera position, viewvector, upvector, and speed
 
     const glm::vec3& getPosition() { return position; }					 // Gets the position of the camera centre of projection
     void setPosition(const glm::vec3& pos) { position = pos; }           // Sets the position of the camera centre of projection

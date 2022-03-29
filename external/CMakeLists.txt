@@ -76,32 +76,3 @@ target_include_directories(${MAGIC_ENUM_LIB_NAME}
         INTERFACE
         ${MAGIC_ENUM_INC_PATH}
         )
-
-
-# assimp
-set(ASSIMP_LIB_NAME "assimp")
-set(ASSIMP_INC_PATH ${ASSIMP_LIB_NAME}/include)
-
-set(ASSIMP_DOUBLE_PRECISION OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
-set(ASSIMP_INSTALL_PDB ON)
-
-add_subdirectory(${ASSIMP_LIB_NAME})
-
-
-# freetype
-set(FREETYPE_LIB_NAME "freetype")
-set(FREETYPE_INC_PATH ${FREETYPE_LIB_NAME}/include)
-
-add_subdirectory(${FREETYPE_LIB_NAME})
-
-
-# openal
-set(OPENAL_LIB_NAME "openal")
-set(OPENAL_INC_PATH ${OPENAL_LIB_NAME}/include)
-
-add_subdirectory(${OPENAL_LIB_NAME})

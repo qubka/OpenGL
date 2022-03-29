@@ -7,11 +7,8 @@
 #include "random.hpp"
 #include "extentions.hpp"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
 // Constructor
-Game::Game() : window{ "OpenGL Template", { 1280, 720 }}, camera{}, audioManager{} {
+Game::Game() : window{ "OpenGL Template", { 1280, 720 }}, camera{ {0.0f, 10.0f, 100.0f}, {1, 0, 0, 0}, 50.0f } {
     Input::Setup(window);
 }
 
@@ -34,10 +31,6 @@ void Game::init() {
     glCall(glShadeModel, GL_SMOOTH);
     glCall(glPixelStorei, GL_UNPACK_ALIGNMENT, 4);
     glCall(glPointSize, 7.0f);
-
-    // Initialise audio and play background music
-    audioManager.load("resources/audio/fsm-team-escp-paradox.wav");
-    audioManager.play("resources/audio/fsm-team-escp-paradox.wav");
 
     mainShader = std::make_unique<Shader>();
     mainShader->link("resources/shaders/mainShader.vert", "resources/shaders/mainShader.frag");
@@ -202,7 +195,7 @@ void Game::render() {
     for (auto entity : group) {
         auto [transform, model] = group.get<TransformComponent, ModelComponent>(entity);
 
-        if (frustum.checkSphere(transform.translation, model.radius * glm::max(transform.scale.x, transform.scale.y, transform.scale.z)))) {
+        if (frustum.checkSphere(transform.translation, model.radius * glm::max(transform.scale.x, transform.scale.y, transform.scale.z))) {
             glm::mat4 transformMatrix{ transform };
             glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
 
@@ -214,7 +207,7 @@ void Game::render() {
 
     auto meshes = registry.view<const TransformComponent, const MeshComponent>();
     for (auto [entity, transform, mesh] : meshes.each()) {
-        if (frustum.checkSphere(transform.translation, mesh.radius * glm::max(transform.scale.x, transform.scale.y, transform.scale.z)))) {
+        if (frustum.checkSphere(transform.translation, mesh.radius * glm::max(transform.scale.x, transform.scale.y, transform.scale.z))) {
             glm::mat4 transformMatrix{ transform };
             glm::mat3 normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ transformMatrix })) };
 

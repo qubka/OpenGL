@@ -3,7 +3,7 @@
 #include "input.hpp"
 
 // Constructor for camera -- initialise with some default values
-Camera::Camera() : position{0.0f, 10.0f, 100.0f}, speed{50.0f} {
+Camera::Camera(const glm::vec3& position, const glm::quat& rotation, float speed) : position{position}, rotation{rotation}, speed{speed} {
 }
 
 // Update the camera to respond to mouse motion for rotations and keyboard for translation

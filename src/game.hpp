@@ -3,7 +3,6 @@
 // Setup includes
 #include "window.hpp"
 #include "input.hpp"
-#include "audiomanager.hpp"
 
 // Game includes
 #include "camera.hpp"
@@ -48,7 +47,6 @@ private:
 	Frustum frustum;
 	CatmullRom catmullRom;
 
-	AudioManager audioManager;
 	DirectionalLight directionalLight;
     std::unique_ptr<Skybox> skybox;
     std::unique_ptr<TextMesh> textMesh;
