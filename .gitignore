@@ -5,6 +5,7 @@
 CMakeSettings.json
 cpp.hint
 
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -25,6 +26,7 @@ cmake-build-debug/
 
 # DLLs in bin
 !bin/*.dll
+!bin/*.lib
 bin_debug
 
 # CMake
