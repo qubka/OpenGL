@@ -163,9 +163,9 @@ aiScene Model::GenerateScene(const std::unique_ptr<Mesh>& mesh) {
 
     for (size_t i = 0; i < numVertices; i++) {
         const auto& v = vertices[i];
-        pMesh->mVertices[i] = aiVector3D{v.position.x, v.position.y, v.position.z};
-        pMesh->mNormals[i] = aiVector3D{v.normal.x, v.normal.y, v.normal.z};
-        pMesh->mTextureCoords[0][i] = aiVector3D{v.texture.x, v.texture.y, 0};
+        pMesh->mVertices[i] = {v.position.x, v.position.y, v.position.z};
+        pMesh->mNormals[i] = {v.normal.x, v.normal.y, v.normal.z};
+        pMesh->mTextureCoords[0][i] = {v.texture.x, v.texture.y, 0};
     }
 
     const auto& indices = mesh->indices;

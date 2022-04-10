@@ -25,6 +25,7 @@ if(WIN32)
 else()
     find_package(Freetype REQUIRED)
     find_package(assimp REQUIRED)
+    set(ASSIMP_LIBRARY "assimp::assimp")
 endif()
 
 file(GLOB_RECURSE SRC_SOURCES src/*.cpp)
