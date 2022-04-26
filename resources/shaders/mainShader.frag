@@ -17,42 +17,36 @@ in vec2 v_tex_coord;
 in vec3 v_normal;
 in vec3 v_position;
 
-struct VSOutput
-{
+struct VSOutput {
 	vec2 TexCoord;
 	vec3 Normal;
 	vec3 WorldPos;
 };
 
-struct BaseLight
-{
+struct BaseLight {
 	vec3 Color;
 	float AmbientIntensity;
 	float DiffuseIntensity;
 };
 
-struct DirectionalLight
-{
+struct DirectionalLight {
 	BaseLight Base;
 	vec3 Direction;
 };
 
-struct Attenuation
-{
+struct Attenuation {
 	float Constant;
 	float Linear;
 	float Exp;
 };
 
-struct PointLight
-{
+struct PointLight {
 	BaseLight Base;
 	vec3 Position;
 	Attenuation Atten;
 };
 
-struct SpotLight
-{
+struct SpotLight {
 	PointLight Base;
 	vec3 Direction;
 	float Cutoff;
@@ -69,7 +63,7 @@ uniform float gMatSpecularIntensity;
 uniform float gSpecularPower;
 uniform bool has_texture = false;
 uniform Material material;
-uniform float transparency;
+uniform float transparency = 1.0f;
 uniform bool lighting_on = true;
 uniform bool fog_on = false;
 uniform vec3 fog_colour;
@@ -81,13 +75,13 @@ in vec4 v_pos;
 float rho = 0.15f;
 
 uniform bool colouring_on = false;
-uniform vec3 in_colour = vec3(1,0,0);
+uniform vec3 in_colour = vec3(1,1,1);
 uniform vec2 texture_scale = vec2(1,1);
 
 vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, VSOutput In)
 {
 	vec4 AmbientColor;
-	if(has_texture)
+	if (has_texture)
 		AmbientColor = vec4(Light.Color * Light.AmbientIntensity, 1.0f);
 	else
 		AmbientColor = vec4(Light.Color * Light.AmbientIntensity * material.ambient, 1.0f);
@@ -97,7 +91,7 @@ vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, VSOutput In)
 	vec4 SpecularColor = vec4(0, 0, 0, 0);
 
 	if (DiffuseFactor > 0.0) {
-		if(has_texture)
+		if (has_texture)
 			DiffuseColor = vec4(Light.Color * Light.DiffuseIntensity * DiffuseFactor, 1.0f);
 		else
 			DiffuseColor = vec4(Light.Color * Light.DiffuseIntensity * DiffuseFactor * material.diffuse, 1.0f);
@@ -106,7 +100,7 @@ vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, VSOutput In)
 		float SpecularFactor = dot(VertexToEye, LightReflect);
 		if (SpecularFactor > 0.0) {
 			SpecularFactor = pow(SpecularFactor, gSpecularPower);
-			if(has_texture)
+			if (has_texture)
 				SpecularColor = vec4(Light.Color * gMatSpecularIntensity * SpecularFactor, 1.0f);
 			else
 				SpecularColor = vec4(Light.Color * gMatSpecularIntensity * SpecularFactor * material.specular * material.shininess, 1.0f);
@@ -142,7 +136,7 @@ vec4 CalcSpotLight(SpotLight l, VSOutput In)
 
 	if (SpotFactor > l.Cutoff) {
 		vec4 Color = CalcPointLight(l.Base, In);
-		return Color * (1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - l.Cutoff));
+		return Color * (1.0 - (1.0 - SpotFactor) * 1.0 / (1.0 - l.Cutoff));
 	} else {
 		return vec4(0,0,0,0);
 	}
@@ -157,10 +151,10 @@ void main()
 
 	vec4 result;
 
-	if(!lighting_on) {
-		if(has_texture) {
+	if (!lighting_on) {
+		if (has_texture) {
 			result = texture(diffuse0, In.TexCoord.xy);
-			result.w *= transparency;
+			result.w = transparency;
 		} else
 			result = vec4(material.ambient, material.transparency);
 
@@ -179,7 +173,7 @@ void main()
 
 		if (has_texture) {
 			result = texture(diffuse0, In.TexCoord.xy) * TotalLight;
-			result.w *= transparency;
+			result.w = transparency;
 		} else {
 			if (material.transparency < 1.0)
 				TotalLight.w = material.transparency;
@@ -187,23 +181,23 @@ void main()
 		}
 	}
 
-	if(fog_on) {
+	if (fog_on) {
 		float d = length(v_pos.xyz);
 		float w;
-		if(fog_factor_type == 0) {
+		if (fog_factor_type == 0) {
 			if (d < fog_end)
-				w = (fog_end - d) / (fog_end-fog_start);
+				w = (fog_end - d) / (fog_end - fog_start);
 			else
 				w = 0;
 		} else if (fog_factor_type == 1) {
-			w = exp(-(rho*d));
+			w = exp(-(rho * d));
 		} else {
-			w = exp(-(rho*d)*(rho*d));
+			w = exp(-(rho * d) * (rho * d));
 		}
 		result.rgb = mix(fog_colour, result.rgb, w);
 	}
 
-	if(colouring_on) {
+	if (colouring_on) {
 		result = result * vec4(in_colour, transparency);
 	}
 

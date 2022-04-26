@@ -63,6 +63,7 @@ private:
 
 	void displayFrameRate();
 	void moveShip();
+    void blinkEffect();
 
     friend int ::main(int argc, char** argv);
 

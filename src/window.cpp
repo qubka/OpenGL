@@ -70,7 +70,7 @@ void Window::initWindow(bool fullscreen) {
     int glad = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
     assert(glad && "Failed to initialize GLAD!");
 
-    //glfwSwapInterval(1); // enable vsync
+    glfwSwapInterval(1); // enable vsync
     glCall(glViewport, 0, 0, width, height);
 
     if (position != glm::ivec2{ 0, 0 }) {

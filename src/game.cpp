@@ -22,6 +22,8 @@ void Game::init() {
     glCall(glClearColor, 1.0f, 1.0f, 1.0f, 1.0f);
     glCall(glClearStencil, 0);
     glCall(glClearDepth, 1.0f);
+    glCall(glEnable, GL_BLEND);
+    glCall(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glCall(glEnable, GL_CULL_FACE);
     glCall(glEnable, GL_LIGHTING);
     glCall(glEnable, GL_TEXTURE_2D);
@@ -43,15 +45,16 @@ void Game::init() {
 
     mainShader->use();
     mainShader->setUniform("fog_on", true);
-    mainShader->setUniform("fog_colour", glm::vec3{ 0.5 });
+    mainShader->setUniform("fog_colour", glm::vec3{ 0.5f });
     mainShader->setUniform("fog_factor_type", 0);
-    mainShader->setUniform("fog_start", 20.f);
-    mainShader->setUniform("fog_end", 1000.f);
+    mainShader->setUniform("fog_start", 20.0f);
+    mainShader->setUniform("fog_end", 1000.0f);
 
+    mainShader->setUniform("colouring_on", false);
+    mainShader->setUniform("has_texture", true);
     mainShader->setUniform("lighting_on", true);
-    mainShader->setUniform("transparency", 1.0f);
-    mainShader->setUniform("gMatSpecularIntensity", 1.f);
-    mainShader->setUniform("gSpecularPower", 10.f);
+    mainShader->setUniform("gMatSpecularIntensity", 1.0f);
+    mainShader->setUniform("gSpecularPower", 10.0f);
 
     directionalLight.submit(mainShader);
 
@@ -84,8 +87,9 @@ void Game::init() {
     }
 
     auto tetrahedron = registry.create();
-    registry.emplace<TransformComponent>(tetrahedron);
+    registry.emplace<TransformComponent>(tetrahedron, glm::vec3{0}, glm::quat{1, 0, 0, 0}, glm::vec3{10.0f});
     registry.emplace<MeshComponent>(tetrahedron, geometry::tetrahedron(glm::vec3{1.0f, 3.0f, 1.0f}, std::make_unique<Texture>(255, 0, 255)));
+    registry.emplace<BlinkComponent>(tetrahedron);
 
     // Load meshes
 
@@ -119,10 +123,10 @@ void Game::init() {
     spotLight.direction = direction;
     spotLight.cutoff = 0.9f;
     auto& pointLight = registry.emplace<PointLight>(spaceship);
-    pointLight.position = initial - direction * 10.0f;
+    pointLight.position = initial;
     pointLight.color = glm::vec3{ 0.17f, 1.0f, 0.025f };
-    pointLight.ambientIntensity = 0.25f;
-    pointLight.diffuseIntensity = 0.6f;
+    pointLight.ambientIntensity = 2.25f;
+    pointLight.diffuseIntensity = 3.6f;
 
     for (const auto& v : poisson::diskSampler2D(50, {1000, 1000}, 50)) {
         auto entity = registry.create();
@@ -171,7 +175,6 @@ void Game::init() {
 void Game::render() {
     // Clear the buffers and enable depth testing (z-buffering)
     glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glCall(glDisable, GL_BLEND);
     glCall(glEnable, GL_DEPTH_TEST);
 
     // Get camera view and proj matricies
@@ -201,6 +204,7 @@ void Game::render() {
 
             mainShader->setUniform("u_transform", transformMatrix);
             mainShader->setUniform("u_normal", normalMatrix);
+            mainShader->setUniform("transparency", model.transparency);
             model()->render(mainShader);
         }
     }
@@ -213,6 +217,7 @@ void Game::render() {
 
             mainShader->setUniform("u_transform", transformMatrix);
             mainShader->setUniform("u_normal", normalMatrix);
+            mainShader->setUniform("transparency", mesh.transparency);
             mesh()->render(mainShader);
         }
     }
@@ -229,6 +234,7 @@ void Game::render() {
 
         mainShader->setUniform("u_transform", transformMatrix);
         mainShader->setUniform("u_normal", normalMatrix);
+        mainShader->setUniform("transparency", 1.0f);
         m()->render(mainShader);
     }
 
@@ -273,8 +279,6 @@ void Game::render() {
 
     // Disable depth and enable blend for text rendering
     glCall(glDisable, GL_DEPTH_TEST);
-    glCall(glEnable, GL_BLEND);
-    glCall(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     textShader->use();
     textShader->setUniform("u_projection", camera.getOrthographicProjectionMatrix());
@@ -333,6 +337,7 @@ void Game::update() {
         viewMode = viewMode + 1 % 4;
 
     moveShip();
+    blinkEffect();
 
     if (window.Locked()) {
         camera.update(dt);
@@ -423,6 +428,15 @@ void Game::moveShip() {
                 break;
             }
         }
+    }
+}
+
+void Game::blinkEffect() {
+    auto meshes = registry.view<MeshComponent, BlinkComponent>();
+    for (auto [entity, mesh] : meshes.each()) {
+        mesh.transparency += 0.01;
+        if (mesh.transparency > 1.0f)
+            mesh.transparency = 0;
     }
 }
 
